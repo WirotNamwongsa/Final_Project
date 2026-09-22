@@ -1,0 +1,195 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1500" height="2400" viewBox="0 0 1500 2400">
+  <defs>
+    <style>
+      .bg { fill: #f7f9fc; }
+      .box { fill: #ffffff; stroke: #162f55; stroke-width: 3; }
+      .title { font: 700 24px "Tahoma", "Arial", sans-serif; fill: #122846; }
+      .main-title { font: 700 34px "Tahoma", "Arial", sans-serif; fill: #102a4a; }
+      .note { font: 600 17px "Tahoma", "Arial", sans-serif; fill: #52667f; }
+      .uc { fill: #4b5e78; stroke: #253a55; stroke-width: 2; }
+      .new { fill: #dff7e8; stroke: #23884f; stroke-width: 2.5; }
+      .uc-text { font: 700 18px "Tahoma", "Arial", sans-serif; fill: white; text-anchor: middle; dominant-baseline: middle; }
+      .new-text { font: 700 17px "Tahoma", "Arial", sans-serif; fill: #123822; text-anchor: middle; dominant-baseline: middle; }
+      .line { stroke: #213955; stroke-width: 2.3; fill: none; marker-end: url(#arrow); }
+      .dash { stroke: #213955; stroke-width: 2.2; fill: none; stroke-dasharray: 8 8; marker-end: url(#arrow); }
+      .actor-line { stroke: #f97316; stroke-width: 5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+      .actor-head { fill: #f97316; }
+      .actor-text { font: 700 17px "Tahoma", "Arial", sans-serif; fill: #111827; text-anchor: middle; }
+      .external { fill: #eef2ff; stroke: #334155; stroke-width: 2; }
+      .external-text { font: 700 15px "Tahoma", "Arial", sans-serif; fill: #111827; text-anchor: middle; dominant-baseline: middle; }
+      .legend-new { fill: #dff7e8; stroke: #23884f; stroke-width: 2; }
+      .legend-old { fill: #4b5e78; stroke: #253a55; stroke-width: 2; }
+      .legend-text { font: 700 17px "Tahoma", "Arial", sans-serif; fill: #17324d; }
+      .small { font: 600 14px "Tahoma", "Arial", sans-serif; fill: #475569; text-anchor: middle; }
+    </style>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#213955"/>
+    </marker>
+  </defs>
+
+  <rect class="bg" width="1500" height="2400"/>
+  <text class="main-title" x="50" y="58">Use Case Diagram — ระบบรับสมัครนักเรียนนักศึกษา</text>
+  <text class="note" x="50" y="90">รูปแบบแนวตั้งตามตัวอย่าง: ผู้ใช้งานอยู่ซ้าย เส้นหลักลงแนวตั้ง และ Use Case เรียงจากบนลงล่าง</text>
+  <rect class="legend-old" x="1010" y="38" width="38" height="24" rx="12"/>
+  <text class="legend-text" x="1062" y="57">ระบบเดิม</text>
+  <rect class="legend-new" x="1180" y="38" width="38" height="24" rx="12"/>
+  <text class="legend-text" x="1232" y="57">เพิ่มใหม่</text>
+
+  <!-- Module 1 -->
+  <rect class="box" x="30" y="125" width="1440" height="760" rx="14"/>
+  <text class="title" x="55" y="165">โมดูลที่ 1 — การสมัครเรียน (Public)</text>
+
+  <circle class="actor-head" cx="130" cy="450" r="17"/>
+  <path class="actor-line" d="M130 470 L130 520 M98 490 L162 490 M130 520 L104 565 M130 520 L156 565"/>
+  <text class="actor-text" x="130" y="600">ผู้สมัคร</text>
+  <text class="small" x="130" y="622">(Applicant)</text>
+
+  <line class="line" x1="180" y1="500" x2="340" y2="500"/>
+  <line class="line" x1="340" y1="210" x2="340" y2="810"/>
+
+  <ellipse class="uc" cx="620" cy="220" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="220">ดูหลักสูตรและสาขาที่เปิดรับ</text>
+  <line class="line" x1="340" y1="220" x2="365" y2="220"/>
+
+  <ellipse class="uc" cx="620" cy="305" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="305">อ่านคู่มือการสมัคร</text>
+  <line class="line" x1="340" y1="305" x2="365" y2="305"/>
+
+  <ellipse class="uc" cx="620" cy="390" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="390">กรอกใบสมัครออนไลน์</text>
+  <line class="line" x1="340" y1="390" x2="365" y2="390"/>
+
+  <ellipse class="external" cx="1010" cy="390" rx="145" ry="34"/>
+  <text class="external-text" x="1010" y="390">สแกน OCR บัตรประชาชน</text>
+  <circle class="actor-head" cx="1280" cy="390" r="13"/>
+  <path class="actor-line" d="M1280 405 L1280 443 M1258 420 L1302 420 M1280 443 L1262 475 M1280 443 L1298 475"/>
+  <text class="actor-text" x="1280" y="502">Gemini AI</text>
+  <line class="dash" x1="875" y1="390" x2="865" y2="390"/>
+  <line class="dash" x1="1155" y1="390" x2="1263" y2="390"/>
+
+  <ellipse class="uc" cx="620" cy="475" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="475">อัปโหลดเอกสารสมัคร</text>
+  <line class="line" x1="340" y1="475" x2="365" y2="475"/>
+
+  <ellipse class="uc" cx="620" cy="560" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="560">ตรวจสอบสถานะการสมัคร</text>
+  <line class="line" x1="340" y1="560" x2="365" y2="560"/>
+
+  <ellipse class="uc" cx="620" cy="645" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="645">ชำระเงินและอัปโหลดสลิป</text>
+  <line class="line" x1="340" y1="645" x2="365" y2="645"/>
+
+  <ellipse class="external" cx="1010" cy="645" rx="145" ry="34"/>
+  <text class="external-text" x="1010" y="645">ตรวจสอบ SlipOK API</text>
+  <circle class="actor-head" cx="1280" cy="645" r="13"/>
+  <path class="actor-line" d="M1280 660 L1280 698 M1258 675 L1302 675 M1280 698 L1262 730 M1280 698 L1298 730"/>
+  <text class="actor-text" x="1280" y="757">SlipOK API</text>
+  <line class="dash" x1="875" y1="645" x2="865" y2="645"/>
+  <line class="dash" x1="1155" y1="645" x2="1263" y2="645"/>
+
+  <ellipse class="uc" cx="620" cy="730" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="730">มอบตัวออนไลน์</text>
+  <line class="line" x1="340" y1="730" x2="365" y2="730"/>
+
+  <ellipse class="new" cx="620" cy="815" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="805">รับแจ้งเตือนสถานะ</text>
+  <text class="new-text" x="620" y="828">[Notification เพิ่มใหม่]</text>
+  <line class="line" x1="340" y1="815" x2="365" y2="815"/>
+
+  <!-- Module 2 -->
+  <rect class="box" x="30" y="925" width="1440" height="835" rx="14"/>
+  <text class="title" x="55" y="965">โมดูลที่ 2 — การทำงานของเจ้าหน้าที่และผู้ดูแล (Admin)</text>
+
+  <circle class="actor-head" cx="130" cy="1300" r="17"/>
+  <path class="actor-line" d="M130 1320 L130 1370 M98 1340 L162 1340 M130 1370 L104 1415 M130 1370 L156 1415"/>
+  <text class="actor-text" x="130" y="1450">เจ้าหน้าที่ / ผู้ดูแล</text>
+  <text class="small" x="130" y="1472">(Staff / Admin)</text>
+
+  <line class="line" x1="200" y1="1340" x2="340" y2="1340"/>
+  <line class="line" x1="340" y1="1010" x2="340" y2="1700"/>
+
+  <ellipse class="uc" cx="620" cy="1025" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="1025">เข้าสู่ระบบ</text>
+  <line class="line" x1="340" y1="1025" x2="365" y2="1025"/>
+
+  <ellipse class="new" cx="620" cy="1110" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1100">ดูภาพรวมงานประจำวัน</text>
+  <text class="new-text" x="620" y="1123">[Admin Work Dashboard]</text>
+  <line class="line" x1="340" y1="1110" x2="365" y2="1110"/>
+
+  <ellipse class="uc" cx="620" cy="1195" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="1195">จัดการข้อมูลผู้สมัคร</text>
+  <line class="line" x1="340" y1="1195" x2="365" y2="1195"/>
+
+  <ellipse class="new" cx="620" cy="1280" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1270">ตรวจเอกสารผู้สมัคร</text>
+  <text class="new-text" x="620" y="1293">[Document Review Workflow]</text>
+  <line class="line" x1="340" y1="1280" x2="365" y2="1280"/>
+
+  <ellipse class="new" cx="620" cy="1365" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1355">อนุมัติ / ตีกลับเอกสาร</text>
+  <text class="new-text" x="620" y="1378">และระบุเหตุผลแก้ไข</text>
+  <line class="line" x1="340" y1="1365" x2="365" y2="1365"/>
+
+  <ellipse class="new" cx="620" cy="1450" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1440">ส่งแจ้งเตือนอัตโนมัติ</text>
+  <text class="new-text" x="620" y="1463">เมื่อสถานะเปลี่ยน</text>
+  <line class="line" x1="340" y1="1450" x2="365" y2="1450"/>
+
+  <ellipse class="external" cx="1010" cy="1450" rx="145" ry="34"/>
+  <text class="external-text" x="1010" y="1440">LINE OA</text>
+  <text class="external-text" x="1010" y="1462">Email / SMS</text>
+  <line class="dash" x1="875" y1="1450" x2="865" y2="1450"/>
+
+  <ellipse class="new" cx="620" cy="1535" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1525">ดูประวัติผู้สมัครรายคน</text>
+  <text class="new-text" x="620" y="1548">[Activity Timeline]</text>
+  <line class="line" x1="340" y1="1535" x2="365" y2="1535"/>
+
+  <ellipse class="uc" cx="620" cy="1620" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="1620">จัดการหลักสูตร / สาขา / แผนรับสมัคร</text>
+  <line class="line" x1="340" y1="1620" x2="365" y2="1620"/>
+
+  <ellipse class="uc" cx="620" cy="1705" rx="255" ry="45"/>
+  <text class="uc-text" x="620" y="1705">จัดการค่าใช้จ่ายและจำนวนรับหน้างาน</text>
+  <line class="line" x1="340" y1="1705" x2="365" y2="1705"/>
+
+  <!-- Module 3 -->
+  <rect class="box" x="30" y="1800" width="1440" height="530" rx="14"/>
+  <text class="title" x="55" y="1840">โมดูลที่ 3 — ระบบควบคุม ความปลอดภัย และข้อมูลสำรอง</text>
+
+  <circle class="actor-head" cx="130" cy="2045" r="17"/>
+  <path class="actor-line" d="M130 2065 L130 2115 M98 2085 L162 2085 M130 2115 L104 2160 M130 2115 L156 2160"/>
+  <text class="actor-text" x="130" y="2195">ผู้ดูแลสูงสุด</text>
+  <text class="small" x="130" y="2217">(Super Admin)</text>
+
+  <line class="line" x1="200" y1="2090" x2="340" y2="2090"/>
+  <line class="line" x1="340" y1="1885" x2="340" y2="2260"/>
+
+  <ellipse class="new" cx="620" cy="1895" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1885">กำหนดสิทธิ์ผู้ใช้ละเอียด</text>
+  <text class="new-text" x="620" y="1908">[Role Permission]</text>
+  <line class="line" x1="340" y1="1895" x2="365" y2="1895"/>
+
+  <ellipse class="new" cx="620" cy="1980" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="1970">ตรวจสิทธิ์ก่อนเข้าเมนู / API</text>
+  <text class="new-text" x="620" y="1993">[Permission Check]</text>
+  <line class="line" x1="340" y1="1980" x2="365" y2="1980"/>
+
+  <ellipse class="new" cx="620" cy="2065" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="2055">บันทึกประวัติการทำงาน</text>
+  <text class="new-text" x="620" y="2078">[Audit Log]</text>
+  <line class="line" x1="340" y1="2065" x2="365" y2="2065"/>
+
+  <ellipse class="new" cx="620" cy="2150" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="2140">ตั้งค่าระบบกลาง</text>
+  <text class="new-text" x="620" y="2163">[System Settings]</text>
+  <line class="line" x1="340" y1="2150" x2="365" y2="2150"/>
+
+  <ellipse class="new" cx="620" cy="2235" rx="255" ry="45"/>
+  <text class="new-text" x="620" y="2225">Backup / Export รอบรับสมัคร</text>
+  <text class="new-text" x="620" y="2248">[ข้อมูลและเอกสาร]</text>
+  <line class="line" x1="340" y1="2235" x2="365" y2="2235"/>
+
+  <text class="note" x="750" y="2365" text-anchor="middle">สีเขียวคือระบบที่เพิ่มเข้ามาใหม่ และจัดวางแนวตั้งเพื่อให้อ่านตามลำดับงานได้ง่าย</text>
+</svg>

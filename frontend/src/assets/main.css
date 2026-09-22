@@ -1,0 +1,15 @@
+@import "tailwindcss";
+
+@theme {
+  /* Default Tailwind v4 theme variables are included automatically */
+}
+
+* {
+  font-family: 'Mitr', sans-serif;
+}
+.input-field {
+  @apply w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 transition-all;
+}
+.upload-box {
+  @apply w-full h-40 border-2 border-dashed rounded-xl flex items-center justify-center cursor-pointer hover:border-emerald-400 transition-all overflow-hidden;
+}
