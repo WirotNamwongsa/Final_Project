@@ -14,6 +14,7 @@ export const getExpenseDetails = async (_req: Request, res: Response) => {
         ed.cur_id,
         ed.exp_cost,
         ed.payment_type,
+        ed.exp_sizes,
         CASE WHEN ed.exp_img IS NOT NULL AND ed.exp_img != '' THEN true ELSE false END as has_img,
         c.cur_name,
         c.cur_shortname
@@ -32,7 +33,7 @@ export const getExpenseDetails = async (_req: Request, res: Response) => {
         : null,
       exp_cost: Number(row.exp_cost ?? 0),
       payment_type: row.payment_type || 'mandatory',
-      exp_sizes: [],
+      exp_sizes: row.exp_sizes || [],
       curriculum: row.cur_id
         ? {
             cur_id: row.cur_id,
@@ -93,7 +94,7 @@ export const getExpenseImage = async (req: Request, res: Response) => {
 // Create new expense detail
 export const createExpenseDetail = async (req: Request, res: Response) => {
   try {
-    const { exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type } = req.body
+    const { exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type, exp_sizes } = req.body
 
     if (!exp_name || !exp_detail || !cur_id || exp_cost === undefined || exp_cost === null || exp_cost === '') {
       return res.status(400).json({
@@ -103,11 +104,11 @@ export const createExpenseDetail = async (req: Request, res: Response) => {
     }
 
     const query = `
-      INSERT INTO expense_detail (exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type)
-      VALUES ($1, $2, $3, $4, $5, $6)
+      INSERT INTO expense_detail (exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type, exp_sizes)
+      VALUES ($1, $2, $3, $4, $5, $6, $7)
       RETURNING *
     `
-    const result = await pool.query(query, [exp_name, exp_detail, exp_img || null, cur_id, exp_cost, payment_type || 'mandatory'])
+    const result = await pool.query(query, [exp_name, exp_detail, exp_img || null, cur_id, exp_cost, payment_type || 'mandatory', exp_sizes || []])
 
     res.status(201).json({
       success: true,
@@ -124,7 +125,7 @@ export const createExpenseDetail = async (req: Request, res: Response) => {
 export const updateExpenseDetail = async (req: Request, res: Response) => {
   try {
     const { id } = req.params
-    const { exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type } = req.body
+    const { exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type, exp_sizes } = req.body
 
     let query: string
     let params: any[]
@@ -137,27 +138,27 @@ export const updateExpenseDetail = async (req: Request, res: Response) => {
 
       query = `
         UPDATE expense_detail
-        SET exp_name = $1, exp_detail = $2, exp_img = NULL, cur_id = $3, exp_cost = $4, payment_type = $5
-        WHERE exp_id = $6
-        RETURNING *
-      `
-      params = [exp_name, exp_detail, cur_id, exp_cost, payment_type || 'mandatory', id]
-    } else if (exp_img === undefined) {
-      query = `
-        UPDATE expense_detail
-        SET exp_name = $1, exp_detail = $2, cur_id = $3, exp_cost = $4, payment_type = $5
-        WHERE exp_id = $6
-        RETURNING *
-      `
-      params = [exp_name, exp_detail, cur_id, exp_cost, payment_type || 'mandatory', id]
-    } else {
-      query = `
-        UPDATE expense_detail
-        SET exp_name = $1, exp_detail = $2, exp_img = $3, cur_id = $4, exp_cost = $5, payment_type = $6
+        SET exp_name = $1, exp_detail = $2, exp_img = NULL, cur_id = $3, exp_cost = $4, payment_type = $5, exp_sizes = $6
         WHERE exp_id = $7
         RETURNING *
       `
-      params = [exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type || 'mandatory', id]
+      params = [exp_name, exp_detail, cur_id, exp_cost, payment_type || 'mandatory', exp_sizes || [], id]
+    } else if (exp_img === undefined) {
+      query = `
+        UPDATE expense_detail
+        SET exp_name = $1, exp_detail = $2, cur_id = $3, exp_cost = $4, payment_type = $5, exp_sizes = $6
+        WHERE exp_id = $7
+        RETURNING *
+      `
+      params = [exp_name, exp_detail, cur_id, exp_cost, payment_type || 'mandatory', exp_sizes || [], id]
+    } else {
+      query = `
+        UPDATE expense_detail
+        SET exp_name = $1, exp_detail = $2, exp_img = $3, cur_id = $4, exp_cost = $5, payment_type = $6, exp_sizes = $7
+        WHERE exp_id = $8
+        RETURNING *
+      `
+      params = [exp_name, exp_detail, exp_img, cur_id, exp_cost, payment_type || 'mandatory', exp_sizes || [], id]
     }
 
     const result = await pool.query(query, params)

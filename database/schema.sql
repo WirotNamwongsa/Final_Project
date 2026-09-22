@@ -46,6 +46,7 @@ CREATE TABLE public.admission_plan (
 
 -- expense_detail — รายการค่าใช้จ่ายต่อหลักสูตร (FK → curriculums)
 -- payment_type: 'mandatory' | 'optional' | 'custom'
+-- exp_sizes: array of shirt sizes (e.g., ['S 34', 'M 36', 'L 38', 'XL 40', 'พิเศษ'])
 CREATE TABLE public.expense_detail (
     exp_id       serial       NOT NULL,
     exp_name     varchar(200) NULL,
@@ -54,6 +55,7 @@ CREATE TABLE public.expense_detail (
     cur_id       int4         NULL,
     exp_cost     float8       NULL,
     payment_type varchar(20)  NULL,
+    exp_sizes    text[]       NULL,
     CONSTRAINT expense_detail_pkey PRIMARY KEY (exp_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id)
 );
