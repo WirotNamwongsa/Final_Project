@@ -767,7 +767,7 @@
 
             <!-- ═══ เอกสารมอบตัว (ทะเบียนบ้าน) ═══ -->
             <div
-              v-if="docModal.documents.filter(d => !['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back', 'payment_slip', 'certificate_front', 'certificate_back'].includes(d.doc_type)).length > 0"
+              v-if="docModal.documents.filter(d => !['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back', 'payment_slip', 'certificate_front', 'certificate_back', 'studentcard_front', 'studentcard_back'].includes(d.doc_type)).length > 0"
               class="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
               <div class="flex items-center gap-2 px-4 py-3 bg-purple-50 border-b border-purple-100">
                 <div class="w-6 h-6 rounded-lg bg-purple-500 flex items-center justify-center">
@@ -777,13 +777,13 @@
                 <span class="ml-auto text-xs text-purple-400 font-medium">
                   {{docModal.documents.filter(d =>
                     !['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back',
-                      'payment_slip', 'certificate_front', 'certificate_back'].includes(d.doc_type)).length
+                      'payment_slip', 'certificate_front', 'certificate_back', 'studentcard_front', 'studentcard_back'].includes(d.doc_type)).length
                   }} ไฟล์
                 </span>
               </div>
               <div class="p-4 grid grid-cols-2 gap-3">
                 <div
-                  v-for="doc in docModal.documents.filter(d => !['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back', 'payment_slip', 'certificate_front', 'certificate_back'].includes(d.doc_type))"
+                  v-for="doc in docModal.documents.filter(d => !['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back', 'payment_slip', 'certificate_front', 'certificate_back', 'studentcard_front', 'studentcard_back'].includes(d.doc_type))"
                   :key="doc.doc_type"
                   class="rounded-xl overflow-hidden border border-gray-200 hover:border-emerald-300 transition group">
                   <div class="px-3 py-2 bg-gray-50 border-b border-gray-100 flex items-center justify-between">
@@ -825,7 +825,7 @@
               <!-- Tabs -->
               <div class="flex gap-2 p-3 flex-wrap border-b border-gray-100 bg-gray-50">
                 <button
-                  v-for="doc in docModal.documents.filter(d => ['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'letter_back', 'certificate_front', 'certificate_back'].includes(d.doc_type))"
+                  v-for="doc in docModal.documents.filter(d => ['id_front', 'id_back', 'edu_front', 'edu_back', 'letter_front', 'certificate_front', 'certificate_back', 'studentcard_front', 'studentcard_back'].includes(d.doc_type))"
                   :key="doc.doc_type" @click="docModal.activeTab = doc.doc_type" :class="[
                     'px-3 py-1.5 rounded-lg text-xs font-semibold transition',
                     docModal.activeTab === doc.doc_type
@@ -833,14 +833,14 @@
                       : 'bg-white text-gray-600 border border-gray-200 hover:border-blue-300 hover:text-blue-600'
                   ]">
                   {{
-                    doc.doc_type === 'id_front' ? '🪪 บัตรประชาชน (หน้า)' :
-                      doc.doc_type === 'id_back' ? '🪪 บัตรประชาชน (หลัง)' :
-                        doc.doc_type === 'edu_front' ? '📄 วุฒิการศึกษา (หน้า)' :
-                          doc.doc_type === 'edu_back' ? '📄 วุฒิการศึกษา (หลัง)' :
-                            doc.doc_type === 'letter_front' ? '✉️ จดหมาย (หน้า)' :
-                              doc.doc_type === 'letter_back' ? '✉️ จดหมาย (หลัง)' :
-                                doc.doc_type === 'certificate_front' ? '📄 วุฒิการศึกษา (หน้า)' :
-                                  doc.doc_type === 'certificate_back' ? '📄 วุฒิการศึกษา (หลัง)' : doc.doc_type
+                    doc.doc_type === 'id_front' ? '🪪 บัตรประชาชน(หน้า)' :
+                      doc.doc_type === 'id_back' ? '🪪 บัตรประชาชน(หลัง)' :
+                        doc.doc_type === 'edu_front' ? '📄 วุฒิการศึกษา(หน้า)' :
+                          doc.doc_type === 'edu_back' ? '📄 วุฒิการศึกษา(หลัง)' :
+                            doc.doc_type === 'letter_front' ? '✉️ หนังสือรับรองการเป็นนักเรียน' :
+                              doc.doc_type === 'certificate_front' ? '📄 วุฒิการศึกษา (หน้า)' :
+                                doc.doc_type === 'certificate_back' ? '📄 วุฒิการศึกษา (หลัง)' :
+                                  doc.doc_type === 'studentcard_front' ? '🪪 บัตรนักเรียน' :doc.doc_type
                   }}
                 </button>
               </div>
@@ -913,6 +913,8 @@
                         lightbox.title === 'letter_back' ? '✉️ จดหมาย (หลัง)' :
                           lightbox.title === 'certificate_front' ? '📄 วุฒิการศึกษา (หน้า)' :
                             lightbox.title === 'certificate_back' ? '📄 วุฒิการศึกษา (หลัง)' :
+                              lightbox.title === 'studentcard_front' ? '🪪 บัตรนักเรียน (หน้า)' :
+                                lightbox.title === 'studentcard_back' ? '🪪 บัตรนักเรียน (หลัง)' :
                               lightbox.title === 'self_house_front' ? '🏠 ทะเบียนบ้านตนเอง (หน้า)' :
                                 lightbox.title === 'self_house_back' ? '🏠 ทะเบียนบ้านตนเอง (รายละเอียด)' :
                                   lightbox.title === 'father_house_front' ? '🏠 ทะเบียนบ้านบิดา (หน้า)' :
