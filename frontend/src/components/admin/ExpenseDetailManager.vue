@@ -35,7 +35,7 @@
                     const id = e.curriculum?.cur_id
                     if (tab.value === 'pavoc') return id === 1
                     if (tab.value === 'pavas_direct') return id === 2
-                    if (tab.value === 'pavas_m6') return id === 2
+                    if (tab.value === 'pavas_m6') return id === 3
                 return false
                 }).length
                 }}
@@ -529,7 +529,7 @@ const filteredExpenses = computed(() => {
 
     if (selectedFilter.value === 'pavoc') return curId === 1
     if (selectedFilter.value === 'pavas_direct') return curId === 2
-    if (selectedFilter.value === 'pavas_m6') return curId === 2
+    if (selectedFilter.value === 'pavas_m6') return curId === 3
 
     return true
   })
