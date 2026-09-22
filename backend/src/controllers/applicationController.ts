@@ -122,8 +122,8 @@ export const getAdmissionPlan = async (req: Request, res: Response) => {
       WHERE (
         CASE
           WHEN $1 = 'm3'  THEN c.cur_shortname = 'ปวช.'
-          WHEN $1 = 'm6'  THEN c.cur_shortname = 'ปวส.'
-          WHEN $1 = 'pvc' THEN c.cur_shortname = 'ปวส.'
+          WHEN $1 = 'm6'  THEN c.cur_shortname = 'ปวส(ม.6)'
+          WHEN $1 = 'pvc' THEN c.cur_shortname = 'ปวส(สายตรง)'
           ELSE true
         END
       )

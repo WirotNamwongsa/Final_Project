@@ -202,9 +202,9 @@
             </p>
             <p class="text-sm" :class="form.prevLevel === 'm3' ? 'text-blue-600' : 'text-emerald-600'">
               <span v-if="form.prevLevel === 'm3'">✅ ประกาศนียบัตรวิชาชีพ (ปวช.) เท่านั้น</span>
-              <span v-else-if="form.prevLevel === 'm6'">✅ ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) — ทุกสาขาที่รับผู้จบ
+              <span v-else-if="form.prevLevel === 'm6'">✅ ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส. สายม.6) — ทุกสาขาที่รับผู้จบ
                 ม.6</span>
-              <span v-else-if="form.prevLevel === 'pvc'">✅ ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.) — ทุกสาขา</span>
+              <span v-else-if="form.prevLevel === 'pvc'">✅ ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส. สายตรง) — ทุกสาขา</span>
             </p>
           </div>
           <div class="col-span-2 mt-2">
@@ -692,7 +692,9 @@ const idTypeHint = computed(() => {
 })
 
 const fixedCourseLabel = computed(() =>
-  form.prevLevel === 'm3' ? 'ประกาศนียบัตรวิชาชีพ (ปวช.)' : 'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส.)'
+  form.prevLevel === 'm3' ? 'ประกาศนียบัตรวิชาชีพ (ปวช.)' :
+  form.prevLevel === 'm6' ? 'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส. สายม.6)' :
+  'ประกาศนียบัตรวิชาชีพชั้นสูง (ปวส. สายตรง)'
 )
 
 const prevLevelLabel = computed(() => {
