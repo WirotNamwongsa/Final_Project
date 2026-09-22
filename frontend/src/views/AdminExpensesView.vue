@@ -104,25 +104,25 @@ const expenses = ref<any[]>([])
 
 const stats = computed(() => {
   // Group expenses by curriculum type based on actual database data
-  const pavocExpenses = expenses.value.filter(expense => 
-    expense.curriculum?.cur_id === 1 || 
-    expense.curriculum?.cur_shortname === 'ปวช.' 
+  const pavocExpenses = expenses.value.filter(expense =>
+    expense.curriculum?.cur_id === 1 ||
+    expense.curriculum?.cur_shortname === 'ปวช.'
   )
-  
-  const pavasM6Expenses = expenses.value.filter(expense => 
-    expense.curriculum?.cur_id === 2 || 
-    expense.curriculum?.cur_shortname === 'ปวส.' 
+
+  const pavasDirectExpenses = expenses.value.filter(expense =>
+    expense.curriculum?.cur_id === 2 ||
+    expense.curriculum?.cur_shortname === 'ปวส(สายตรง)'
   )
-  
-  // For now, treat all PAVAS as M.6 type since we only have one PAVAS curriculum
-  const pavasDirectExpenses = expenses.value.filter(expense => 
-    expense.curriculum?.cur_id === 2
-  ) // No direct track curriculum in database yet
-  
+
+  const pavasM6Expenses = expenses.value.filter(expense =>
+    expense.curriculum?.cur_id === 3 ||
+    expense.curriculum?.cur_shortname === 'ปวส(ม.6)'
+  )
+
   const pavocCost = pavocExpenses.reduce((sum, expense) => sum + (expense.exp_cost || 0), 0)
   const pavasDirectCost = pavasDirectExpenses.reduce((sum, expense) => sum + (expense.exp_cost || 0), 0)
   const pavasM6Cost = pavasM6Expenses.reduce((sum, expense) => sum + (expense.exp_cost || 0), 0)
-  
+
   return {
     pavocCost,
     pavasDirectCost,
