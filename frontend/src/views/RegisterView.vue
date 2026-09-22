@@ -177,7 +177,7 @@
             <label class="text-sm text-gray-600 mb-1 block">สาขาวิชาที่จบปวช *</label>
             <select v-model="form.prevBranch" class="input-field">
               <option value="">เลือกสาขาวิชาที่จบปวช</option>
-              <option v-for="branch in pvcBranches" :key="branch.div_id" :value="branch.div_name">
+              <option v-for="branch in pvcBranches" :key="branch.div_id" :value="branch.div_id">
                 {{ branch.div_name }}
               </option>
             </select>

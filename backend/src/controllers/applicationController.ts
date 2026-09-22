@@ -247,6 +247,9 @@ export const createApplication = async (req: Request, res: Response) => {
     console.error('❌ detail:', err.detail)
     console.error('❌ hint:', err.hint)
     console.error('❌ where:', err.where)
+    console.error('❌ code:', err.code)
+    console.error('❌ stack:', err.stack)
+    console.error('❌ Request body:', req.body)
     sendError(res, "เกิดข้อผิดพลาดในการส่งใบสมัคร", 500, err);
   } finally {
     client.release();
