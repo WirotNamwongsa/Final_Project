@@ -20,7 +20,7 @@ export const getExpenseDetails = async (_req: Request, res: Response) => {
         c.cur_shortname
       FROM expense_detail ed
       LEFT JOIN curriculums c ON ed.cur_id = c.cur_id
-      ORDER BY c.cur_name ASC NULLS LAST, ed.exp_name ASC
+      ORDER BY ed.exp_id ASC
     `
     const result = await pool.query(query)
 
