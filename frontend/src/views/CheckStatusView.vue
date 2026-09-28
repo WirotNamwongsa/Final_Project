@@ -45,6 +45,10 @@
                 <p v-if="result.status === 'pending_payment' && result.dueDate" class="text-xs text-orange-600 mt-0.5">
                   หมดเขตชำระ: <strong>{{ result.dueDate }}</strong>
                 </p>
+                <!-- แสดงข้อความรอตรวจสอบเอกสาร -->
+                <p v-else-if="result.status === 'pending_document_review'" class="text-xs text-amber-600 mt-0.5">
+                  รอ admin ตรวจสอบเอกสาร
+                </p>
                 <p v-else class="text-xs opacity-70" :class="statusStyle(result.status).textColor">
                   อัพเดทล่าสุด: {{ result.updatedAt }}
                 </p>
@@ -135,8 +139,8 @@
                         ดาวน์โหลดใบแจ้งชำระเงิน
                       </button>
 
-                      <!-- ปุ่มใหม่ — แสดงเมื่อ paid หรือ enrolled -->
-                      <button v-if="result.status === 'paid' || result.status === 'enrolled'"
+                      <!-- ปุ่มใหม่ — แสดงเมื่อ paid, pending_document_review หรือ enrolled -->
+                      <button v-if="result.status === 'paid' || result.status === 'pending_document_review' || result.status === 'enrolled'"
                         @click="downloadPaymentReceipt"
                         class="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-medium bg-emerald-500 text-white hover:bg-emerald-600 transition-all">
                         <ArrowDownTrayIcon class="w-3.5 h-3.5" />
@@ -151,6 +155,14 @@
                         <ClipboardDocumentCheckIcon class="w-3.5 h-3.5" />
                         ดำเนินการมอบตัว
                       </RouterLink>
+                    </div>
+
+                    <!-- ข้อความรอตรวจสอบเอกสาร -->
+                    <div v-if="i === 2 && result.status === 'pending_document_review'" class="mt-2 ml-9">
+                      <div class="p-3 bg-amber-50 border border-amber-200 rounded-xl">
+                        <p class="text-xs font-medium text-amber-700">รอ admin ตรวจสอบเอกสาร</p>
+                        <p class="text-xs text-amber-600 mt-0.5">เอกสารของคุณอยู่ระหว่างการตรวจสอบ กรุณารอสักครู่</p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -223,6 +235,15 @@ const statusConfig: Record<string, any> = {
     badge: 'bg-blue-100 text-blue-600',
     icon: ClockIcon,
   },
+  pending_document_review: {
+    label: 'รอตรวจสอบเอกสาร',
+    bg: 'bg-amber-50',
+    iconBg: 'bg-amber-100',
+    iconColor: 'text-amber-500',
+    textColor: 'text-amber-700',
+    badge: 'bg-amber-100 text-amber-600',
+    icon: ClockIcon,
+  },
   enrolled: {
     label: 'มอบตัวแล้ว',
     bg: 'bg-emerald-50',
@@ -265,12 +286,14 @@ async function checkStatus() {
       raw: data,
     }
     console.log('🔍 raw data:', result.value.raw)
-    const isPaid = data.status === 'paid' || data.status === 'enrolled'
+    const isPaid = data.status === 'paid' || data.status === 'enrolled' || data.status === 'pending_document_review'
+    const isPendingReview = data.status === 'pending_document_review'
     const isEnrolled = data.status === 'enrolled'
 
     timeline.value = [
       { label: 'กรอกใบสมัครเรียบร้อย', done: true, date: formatDate(data.created_at) },
       { label: 'ชำระเงินค่าสมัคร', done: isPaid, date: isPaid ? (data.paid_at ? formatDate(data.paid_at) : '') : '' },
+      { label: 'รอตรวจสอบเอกสาร', done: isEnrolled, date: isPendingReview ? 'รอ admin ตรวจสอบ' : (isEnrolled ? 'ตรวจสอบแล้ว' : '') },
       { label: 'มอบตัวเสร็จสมบูรณ์', done: isEnrolled, date: isEnrolled ? (data.enrolled_at ? formatDate(data.enrolled_at) : '') : '' },
     ]
   } catch (err: any) {
