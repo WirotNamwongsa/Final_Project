@@ -322,3 +322,101 @@ export const truncateApplicants = async (_req: Request, res: Response) => {
     client.release()
   }
 }
+
+// POST /api/admin/applicants/:app_id/approve-slip
+// อนุมัติสลิปการชำระเงิน
+export const approveSlip = async (req: Request, res: Response) => {
+  const { app_id } = req.params
+  const { verified_by } = req.body
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    // อัปเดตสถานะสลิป
+    await client.query(
+      `UPDATE payments
+       SET slip_approved = true,
+           slip_error_message = NULL,
+           verified_at = NOW(),
+           verified_by = $1
+       WHERE app_id = $2`,
+      [verified_by || 'admin', app_id]
+    )
+
+    // อัปเดตสถานะผู้สมัครเป็น enrolled
+    await client.query(
+      `UPDATE applicants
+       SET status = 'enrolled',
+           updated_at = NOW()
+       WHERE app_id = $1`,
+      [app_id]
+    )
+
+    // บันทึกการมอบตัวใน enrollments table
+    const existingEnrollment = await client.query(
+      `SELECT enroll_id FROM enrollments WHERE app_id = $1`,
+      [app_id]
+    )
+
+    if (existingEnrollment.rows.length === 0) {
+      await client.query(
+        `INSERT INTO enrollments (app_id, enrolled_at, verified_at, verified_by)
+         VALUES ($1, NOW(), NOW(), $2)`,
+        [app_id, verified_by || 'admin']
+      )
+    }
+
+    await client.query('COMMIT')
+
+    res.json({ success: true, message: 'อนุมัติสลิปและเอกสารเรียบร้อยแล้ว' })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('approveSlip error:', error)
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการอนุมัติสลิป' })
+  } finally {
+    client.release()
+  }
+}
+
+// POST /api/admin/applicants/:app_id/reject-slip
+// ปฏิเสธสลิปการชำระเงิน
+export const rejectSlip = async (req: Request, res: Response) => {
+  const { app_id } = req.params
+  const { error_message, verified_by } = req.body
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    // อัปเดตสถานะสลิป
+    await client.query(
+      `UPDATE payments
+       SET slip_approved = false,
+           slip_error_message = $1,
+           verified_at = NOW(),
+           verified_by = $2
+       WHERE app_id = $3`,
+      [error_message || 'สลิปไม่ถูกต้อง', verified_by || 'admin', app_id]
+    )
+
+    // อัปเดตสถานะผู้สมัครกลับเป็น paid (ให้ upload สลิปใหม่)
+    await client.query(
+      `UPDATE applicants
+       SET status = 'paid',
+           updated_at = NOW()
+       WHERE app_id = $1`,
+      [app_id]
+    )
+
+    await client.query('COMMIT')
+
+    res.json({ success: true, message: 'ปฏิเสธสลิปเรียบร้อยแล้ว' })
+  } catch (error) {
+    await client.query('ROLLBACK')
+    console.error('rejectSlip error:', error)
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการปฏิเสธสลิป' })
+  } finally {
+    client.release()
+  }
+}

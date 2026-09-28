@@ -93,7 +93,7 @@ export const verifySlip = async (req: Request, res: Response) => {
     // ✅ สลิปผ่าน → save slip_path ด้วย
    await pool.query(`
   UPDATE applicants
-  SET status = 'pending_approve'
+  SET status = 'pending_document_review'
   WHERE app_id = $1
 `, [app_id])
 
@@ -163,13 +163,13 @@ export const confirmEnrollment = async (req: Request, res: Response) => {
 
     const { app_id, status } = applicant.rows[0]
 
-    // ✅ ต้องเป็น paid หรือ pending_approve หรือ enrolled เท่านั้น
+    // ✅ ต้องเป็น paid หรือ pending_document_review หรือ enrolled เท่านั้น
 if (status === 'pending_payment') {
   return sendError(res, 'กรุณารอ admin ยืนยันการชำระเงินก่อน', 400)
 }
 
 await client.query(`
-  UPDATE applicants SET status = 'enrolled' WHERE app_id = $1
+  UPDATE applicants SET status = 'pending_document_review' WHERE app_id = $1
 `, [app_id])
 
     const files = req.files as Record<string, Express.Multer.File[]>

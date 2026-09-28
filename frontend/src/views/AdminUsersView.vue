@@ -155,7 +155,7 @@
               class="pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white appearance-none cursor-pointer min-w-[140px] text-gray-700">
               <option value="">ทุกสถานะ</option>
               <option value="pending_payment">สมัครใหม่</option>
-              <option value="pending_approve">รอตรวจสอบ</option>
+              <option value="pending_document_review">รอตรวจสอบเอกสาร</option>
               <option value="paid">พร้อมมอบตัว</option>
               <option value="enrolled">มอบตัวแล้ว</option>
             </select>
@@ -274,13 +274,13 @@
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
                     row.สถานะ === 'enrolled' ? 'bg-green-50 text-green-700 border border-green-200' :
                       row.สถานะ === 'paid' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
-                        row.สถานะ === 'pending_approve' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
+                        row.สถานะ === 'pending_document_review' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
                           'bg-gray-50 text-gray-500 border border-gray-200'
                   ]">
                     {{
                       row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
                         row.สถานะ === 'paid' ? 'พร้อมมอบตัว' :
-                          row.สถานะ === 'pending_approve' ? 'รอตรวจสอบ' : 'สมัครใหม่'
+                          row.สถานะ === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
                 </td>
@@ -293,7 +293,7 @@
                   </button>
                 </td>
                 <td class="px-4 py-3">
-                  <template v-if="row.สถานะ === 'pending_approve'">
+                  <template v-if="row.สถานะ === 'pending_document_review'">
                     <button @click.stop="openInfoModal(row)"
                       class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-lg text-xs font-semibold transition-colors">
                       <User class="w-3 h-3" />
@@ -408,7 +408,7 @@
             'px-6 py-5 flex-shrink-0',
             infoModal.status === 'enrolled' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
               infoModal.status === 'paid' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
-                infoModal.status === 'pending_approve' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
+                infoModal.status === 'pending_document_review' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
                   'bg-gradient-to-r from-gray-500 to-gray-600'
           ]">
             <div class="flex items-start justify-between">
@@ -428,7 +428,7 @@
                     {{
                       infoModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
                         infoModal.status === 'paid' ? 'พร้อมมอบตัว' :
-                          infoModal.status === 'pending_approve' ? 'รอตรวจสอบ' : 'สมัครใหม่'
+                          infoModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
                 </div>
@@ -635,7 +635,7 @@
                 <FileText class="w-4 h-4" /> ใบแจ้งชำระเงิน
               </button>
 
-              <button v-else-if="infoModal.status === 'pending_approve'" @click="openDocModalFromInfo"
+              <button v-else-if="infoModal.status === 'pending_document_review'" @click="openDocModalFromInfo"
                 class="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-amber-200">
                 <Eye class="w-4 h-4" /> รายละเอียดการสมัคร
               </button>
@@ -683,14 +683,14 @@
                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1',
                     docModal.status === 'enrolled' ? 'bg-emerald-500/30 text-emerald-200' :
                       docModal.status === 'paid' ? 'bg-blue-400/30 text-blue-200' :
-                        docModal.status === 'pending_approve' ? 'bg-yellow-400/30 text-yellow-200' :
+                        docModal.status === 'pending_document_review' ? 'bg-yellow-400/30 text-yellow-200' :
                           'bg-white/10 text-white/70'
                   ]">
                     <span class="w-1.5 h-1.5 rounded-full bg-current inline-block"></span>
                     {{
                       docModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
                         docModal.status === 'paid' ? 'พร้อมมอบตัว' :
-                          docModal.status === 'pending_approve' ? 'รอตรวจสอบ' : 'สมัครใหม่'
+                          docModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
                 </div>
@@ -862,20 +862,36 @@
 
           <!-- Footer -->
           <div class="flex items-center justify-between px-5 py-4 border-t border-gray-100 bg-white flex-shrink-0">
-            <p class="text-xs text-gray-400 flex items-center gap-1.5">
-              <FileText class="w-3.5 h-3.5" />
-              เอกสารทั้งหมด {{ docModal.documents.length }} รายการ
-            </p>
+            <div class="flex items-center gap-4">
+              <p class="text-xs text-gray-400 flex items-center gap-1.5">
+                <FileText class="w-3.5 h-3.5" />
+                เอกสารทั้งหมด {{ docModal.documents.length }} รายการ
+              </p>
+              <div class="flex gap-2">
+                <!-- ปุ่มยืนยัน/ปฏิเสธการมอบตัว -->
+                <button v-if="docModal.status === 'pending_document_review'" @click="approveSlip"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-emerald-200">
+                  <User class="w-4 h-4" /> ยืนยันการมอบตัว
+                </button>
+                <button v-if="docModal.status === 'pending_document_review'" @click="showRejectSlipModal = true"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-red-200">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                  ปฏิเสธการมอบตัว
+                </button>
+              </div>
+            </div>
             <div class="flex gap-2">
               <button @click="docModal.open = false"
                 class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl transition font-semibold">
                 ปิด
               </button>
-              <button v-if="docModal.status === 'pending_approve'" @click="confirmEnrollmentDirect"
-                class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-emerald-200">
-                <User class="w-4 h-4" /> ยืนยันการมอบตัว
+              <button v-if="docModal.status === 'pending_document_review'" @click="downloadAsOrderPDF" :disabled="ocrProgress.running"
+                class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed">
+                <Download class="w-4 h-4" /> ดาวน์โหลดเอกสาร
               </button>
-              <button v-if="docModal.status === 'pending_approve' || docModal.status === 'paid'"
+              <button v-if="docModal.status === 'paid'"
                 @click="downloadAsOrderPDF" :disabled="ocrProgress.running"
                 class="inline-flex items-center gap-1.5 px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-indigo-200 disabled:opacity-40 disabled:cursor-not-allowed">
                 <Download class="w-4 h-4" /> ดาวน์โหลดเอกสาร
@@ -989,6 +1005,65 @@
                 class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               <Trash2 v-else class="w-4 h-4" />
               ลบข้อมูลถาวร
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </Teleport>
+
+    <!-- Reject Slip Confirmation Dialog -->
+    <Teleport to="body">
+      <div v-if="showRejectSlipModal"
+        class="fixed inset-0 z-[70] flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        @click.self="showRejectSlipModal = false">
+        <div class="bg-white rounded-2xl shadow-2xl w-full max-w-md mx-4 overflow-hidden">
+
+          <!-- Header -->
+          <div class="bg-red-500 px-6 py-5">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </div>
+              <div>
+                <p class="font-bold text-white text-base">ปฏิเสธการมอบตัว</p>
+                <p class="text-red-100 text-xs mt-0.5">ผู้สมัครจะต้องอัปโหลดสลิปใหม่</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Body -->
+          <div class="p-6 space-y-4">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-2">
+                เหตุผลการปฏิเสธ
+              </label>
+              <textarea v-model="rejectReason" rows="3"
+                placeholder="ระบุเหตุผลการปฏิเสธการมอบตัว..."
+                class="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none transition resize-none"
+                :class="rejectReason
+                  ? 'border-red-400 focus:border-red-500 bg-red-50'
+                  : 'border-gray-200 focus:border-gray-400'" />
+            </div>
+          </div>
+
+          <!-- Footer -->
+          <div class="flex justify-end gap-2 px-6 py-4 border-t border-gray-100">
+            <button @click="showRejectSlipModal = false; rejectReason = ''"
+              class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-100 rounded-xl font-semibold transition">
+              ยกเลิก
+            </button>
+            <button @click="rejectSlip"
+              :disabled="!rejectReason || isLoading"
+              class="inline-flex items-center gap-2 px-5 py-2 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition disabled:opacity-40 disabled:cursor-not-allowed">
+              <span v-if="isLoading"
+                class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <svg v-else class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+              ปฏิเสธการมอบตัว
             </button>
           </div>
 
@@ -1214,6 +1289,69 @@ const confirmEnrollmentDirect = async () => {
   } catch (err) {
     console.error('มอบตัวไม่สำเร็จ:', err)
     showErrorDialog('มอบตัวไม่สำเร็จ กรุณาลองใหม่')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// ─── Approve Slip Function ───────────────────────────────────────────
+const approveSlip = async () => {
+  try {
+    isLoading.value = true
+
+    await api.post(`/admin/applicants/${docModal.value.appId}/approve-slip`, {
+      verified_by: 'admin'
+    })
+
+    const index = applicants.value.findIndex(app => app.app_id === docModal.value.appId)
+    if (index !== -1) {
+      applicants.value[index].status = 'enrolled'
+    }
+
+    docModal.value.status = 'enrolled'
+    docModal.value.slipApproved = true
+
+    await fetchApplicants()
+
+    showSuccessDialog('อนุมัติสลิปและเอกสารเรียบร้อยแล้ว')
+
+  } catch (err) {
+    console.error('อนุมัติสลิปไม่สำเร็จ:', err)
+    showErrorDialog('อนุมัติสลิปไม่สำเร็จ กรุณาลองใหม่')
+  } finally {
+    isLoading.value = false
+  }
+}
+
+// ─── Reject Slip Function ───────────────────────────────────────────
+const rejectSlip = async () => {
+  try {
+    isLoading.value = true
+
+    await api.post(`/admin/applicants/${docModal.value.appId}/reject-slip`, {
+      error_message: rejectReason.value || 'สลิปไม่ถูกต้อง',
+      verified_by: 'admin'
+    })
+
+    const index = applicants.value.findIndex(app => app.app_id === docModal.value.appId)
+    if (index !== -1) {
+      applicants.value[index].status = 'paid'
+    }
+
+    docModal.value.status = 'paid'
+    docModal.value.slipApproved = false
+    docModal.value.slipErrorMessage = rejectReason.value || 'สลิปไม่ถูกต้อง'
+
+    await fetchApplicants()
+
+    showRejectSlipModal.value = false
+    rejectReason.value = ''
+
+    showSuccessDialog('ปฏิเสธสลิปเรียบร้อยแล้ว')
+
+  } catch (err) {
+    console.error('ปฏิเสธสลิปไม่สำเร็จ:', err)
+    showErrorDialog('ปฏิเสธสลิปไม่สำเร็จ กรุณาลองใหม่')
   } finally {
     isLoading.value = false
   }
@@ -1960,7 +2098,7 @@ const filteredExportData = computed(() =>
 
     return matchName && matchBranch && matchCur && matchStatus && matchDate && matchEnrolledDate
   }).sort((a, b) => {
-    const statusOrder = { 'pending_approve': 1, 'pending_payment': 2, 'paid': 3, 'enrolled': 4 }
+    const statusOrder = { 'pending_document_review': 1, 'pending_payment': 2, 'paid': 3, 'enrolled': 4 }
     const aStatus = statusOrder[a.สถานะ as keyof typeof statusOrder] || 999
     const bStatus = statusOrder[b.สถานะ as keyof typeof statusOrder] || 999
     return aStatus - bStatus
@@ -1992,7 +2130,7 @@ const getStatusLabel = (status: string): string => {
     'enrolled': 'มอบตัวแล้ว',
     'paid': 'พร้อมมอบตัว',
     'pending_payment': 'สมัครใหม่',
-    'pending_approve': 'รอตรวจสอบ'
+    'pending_document_review': 'รอตรวจสอบเอกสาร'
   }
   return labels[status] || status
 }
@@ -2457,6 +2595,9 @@ const docModal = ref({
   enrolledData: null as any,
 })
 
+const showRejectSlipModal = ref(false)
+const rejectReason = ref('')
+
 const blobUrl = ref<string>('')
 // เพิ่มบรรทัดนี้ใกล้กับ blobUrl
 const slipBlobUrl = ref<string>('')
@@ -2481,7 +2622,7 @@ watch(
 )
 const DOC_FILTER: Record<string, string[]> = {
   pending_payment: ['payment_slip'],
-  pending_approve: [
+  pending_document_review: [
     'payment_slip', 'id_front', 'id_back',
     'edu_front', 'edu_back', 'letter_front', 'letter_back',
     'self_house_front', 'self_house_back',
@@ -2702,6 +2843,7 @@ const openDocModal = async (row: any) => {
     appId: row.ลำดับ,
     status: row.สถานะ || '',
     slipApproved: null,
+    slipErrorMessage: '',
     documents: [],
     activeTab: '',
     imgError: false,
