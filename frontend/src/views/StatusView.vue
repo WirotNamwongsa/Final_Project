@@ -243,7 +243,7 @@ const idTypeLabel = computed(() => {
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'เลขประจำตัวประชาชน 13 หลัก',
-    alien_id: 'เช่น 6-1234-56789-12-3',
+    alien_id: 'เลขบัตรประจำตัวคนต่างด้าว 13 หลัก',
     passport: 'เช่น AA1234567',
     g_code: 'เช่น G-1234567',
     other: 'หมายเลขเอกสาร',
@@ -254,7 +254,7 @@ const idTypePlaceholder = computed(() => {
 const idTypeHint = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'กรอกตัวเลข 13 หลัก ไม่มีขีด',
-    alien_id: 'ตามที่ระบุในบัตรประจำตัวคนต่างด้าว',
+    alien_id: 'กรอกตัวเลข 13 หลัก ตามที่ระบุในบัตรประจำตัวคนต่างด้าว',
     passport: 'ตัวอักษรและตัวเลข ตามหน้าหนังสือเดินทาง',
     g_code: 'รหัส G ที่ออกโดยกรมการปกครอง',
     other: 'หมายเลขตามเอกสารราชการที่ใช้แสดงตน',
@@ -265,7 +265,7 @@ const idTypeHint = computed(() => {
 const maxLength = computed(() => {
   const map: Record<string, number> = {
     thai_id: 13,
-    alien_id: 20,
+    alien_id: 13,
     passport: 20,
     g_code: 15,
     other: 30,
@@ -274,13 +274,13 @@ const maxLength = computed(() => {
 })
 
 const inputPattern = computed(() => {
-  if (selectedIdType.value === 'thai_id') return '[0-9]*'
+  if (selectedIdType.value === 'thai_id' || selectedIdType.value === 'alien_id') return '[0-9]*'
   if (selectedIdType.value === 'passport') return '[A-Za-z0-9]*'
   return '.*'
 })
 
 const inputMode = computed(() => {
-  if (selectedIdType.value === 'thai_id') return 'numeric'
+  if (selectedIdType.value === 'thai_id' || selectedIdType.value === 'alien_id') return 'numeric'
   if (selectedIdType.value === 'passport') return 'text'
   return 'text'
 })
@@ -295,7 +295,7 @@ const validateIdCard = (event: Event) => {
   const value = (event.target as HTMLInputElement).value
 
   // Format input based on ID type
-  if (selectedIdType.value === 'thai_id') {
+  if (selectedIdType.value === 'thai_id' || selectedIdType.value === 'alien_id') {
     if (!/^\d*$/.test(value)) {
       (event.target as HTMLInputElement).value = value.replace(/\D/g, '')
       return
@@ -321,9 +321,9 @@ const validateIdCard = (event: Event) => {
         }
         break
       case 'alien_id':
-        minLength = 8
-        if (value.length < 8) {
-          errorMsg = 'กรุณากรอกเลขบัตรประจำตัวคนต่างด้าวให้ครบ'
+        minLength = 13
+        if (value.length < 13) {
+          errorMsg = 'กรุณากรอกเลขบัตรประจำตัวคนต่างด้าวให้ครบ 13 หลัก'
         }
         break
       case 'passport':
@@ -365,7 +365,13 @@ const checkApplicant = async () => {
   errorMessage.value = ''
 
   try {
-    const res = await api.get(`/applications/check/${idCard.value}`)
+    // Build URL with idType parameter if not thai_id
+    let url = `/applications/check/${idCard.value}`
+    if (selectedIdType.value && selectedIdType.value !== 'thai_id') {
+      url += `?idType=${selectedIdType.value}`
+    }
+
+    const res = await api.get(url)
     applicantInfo.value = res.data?.data || res.data
     if (!applicantInfo.value) {
       errorMessage.value = 'ไม่พบข้อมูลผู้สมัคร'
@@ -403,6 +409,10 @@ const formatDate = (dateString: string) => {
 
 const handleSubmit = async () => {
   if (!applicantInfo.value) return
-  router.push(`/enrollment/${idCard.value}`)
+  let url = `/enrollment/${idCard.value}`
+  if (selectedIdType.value && selectedIdType.value !== 'thai_id') {
+    url += `?idType=${selectedIdType.value}`
+  }
+  router.push(url)
 }
 </script>

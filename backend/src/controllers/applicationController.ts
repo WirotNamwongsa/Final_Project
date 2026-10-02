@@ -260,6 +260,18 @@ export const createApplication = async (req: Request, res: Response) => {
 export const checkStatus = async (req: Request, res: Response) => {
   try {
     const { idCard } = req.params;
+    const { idType } = req.query;
+
+    // Build WHERE clause based on idType
+    let whereClause = 'WHERE a.id_card_number = $1';
+    let params: any[] = [idCard];
+
+    // If idType is provided, add it to the filter
+    if (idType && idType !== 'thai_id') {
+      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2';
+      params = [idCard, idType];
+    }
+
     const result = await pool.query(
       `
       SELECT
@@ -284,7 +296,7 @@ export const checkStatus = async (req: Request, res: Response) => {
       LEFT JOIN payments p ON p.app_id = a.app_id
       LEFT JOIN enrollments e ON e.app_id = a.app_id
       LEFT JOIN documents doc ON doc.app_id = a.app_id
-      WHERE a.id_card_number = $1
+      ${whereClause}
       GROUP BY
         a.app_id, a.prefix, a.full_name, a.status, a.created_at,
         a.prev_level, a.prev_year,
@@ -293,7 +305,7 @@ export const checkStatus = async (req: Request, res: Response) => {
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
         p.slip_approved, p.slip_error_message,
         e.enrolled_at, e.verified_at
-    `, [idCard])
+    `, params)
 
     if (result.rows.length === 0) {
       return sendError(res, "ไม่พบข้อมูลการสมัคร", 404);

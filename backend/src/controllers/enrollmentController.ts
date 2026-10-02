@@ -15,15 +15,25 @@ export const verifySlip = async (req: Request, res: Response) => {
     const file = req.file
     if (!file) return sendError(res, 'ไม่พบไฟล์สลิป', 400)
 
-    const { idCard } = req.body
+    const { idCard, idType } = req.body
     if (!idCard) return sendError(res, 'ไม่พบเลขบัตรประชาชน', 400)
+
+    // Build WHERE clause based on idType
+    let whereClause = 'WHERE a.id_card_number = $1'
+    let params: any[] = [idCard]
+
+    // If idType is provided and not thai_id, add it to the filter
+    if (idType && idType !== 'thai_id') {
+      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2'
+      params = [idCard, idType]
+    }
 
     const applicantResult = await pool.query(`
       SELECT a.app_id, a.status, p.total_amount
       FROM applicants a
       JOIN payments p ON p.app_id = a.app_id
-      WHERE a.id_card_number = $1
-    `, [idCard])
+      ${whereClause}
+    `, params)
 
     if (applicantResult.rows.length === 0) {
       return sendError(res, 'ไม่พบข้อมูลผู้สมัคร', 404)
@@ -145,17 +155,27 @@ export const verifySlip = async (req: Request, res: Response) => {
 export const confirmEnrollment = async (req: Request, res: Response) => {
   const client = await pool.connect()
   try {
-    const { idCard } = req.body
+    const { idCard, idType } = req.body
 
     if (!idCard || idCard.length < 5) {
       return sendError(res, 'เลขบัตรประชาชนไม่ถูกต้อง', 400)
     }
 
+    // Build WHERE clause based on idType
+    let whereClause = 'WHERE a.id_card_number = $1'
+    let params: any[] = [idCard]
+
+    // If idType is provided and not thai_id, add it to the filter
+    if (idType && idType !== 'thai_id') {
+      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2'
+      params = [idCard, idType]
+    }
+
     const applicant = await client.query(`
       SELECT a.app_id, a.status
       FROM applicants a
-      WHERE a.id_card_number = $1
-    `, [idCard])
+      ${whereClause}
+    `, params)
 
     if (applicant.rows.length === 0) {
       return sendError(res, 'ไม่พบข้อมูลการสมัครในระบบ', 404)

@@ -104,6 +104,7 @@ CREATE TABLE public.applicants (
     id_type        varchar(20)  NOT NULL DEFAULT 'thai_id',
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
     CONSTRAINT applicants_id_card_number_key UNIQUE (id_card_number),
+    CONSTRAINT applicants_id_type_check CHECK (id_type IN ('thai_id', 'alien_id', 'passport', 'g_code', 'other')),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
     CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)

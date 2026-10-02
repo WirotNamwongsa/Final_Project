@@ -15,7 +15,7 @@
         <input v-model="idCard" type="text" placeholder="เลขบัตรประชาชน / เลขต่างด้าว / Passport / G-Code"
           maxlength="20" class="input-field text-center tracking-widest text-base"
           @input="idCard = idCard.toUpperCase()" @keyup.enter="checkStatus" />
-        <p class="text-xs text-gray-400 mt-1">รองรับ: เลขบัตรประชาชน 13 หลัก, บัตรต่างด้าว, Passport, G-Code</p>
+        <p class="text-xs text-gray-400 mt-1">รองรับ: เลขบัตรประชาชน 13 หลัก, บัตรต่างด้าว, Passport, G-Code, เอกสารราชการอื่นๆ</p>
       </div>
 
       <button @click="checkStatus" :disabled="idCard.length < 5 || isLoading"

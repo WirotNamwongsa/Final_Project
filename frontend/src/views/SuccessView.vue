@@ -597,6 +597,7 @@ interface SlipVerifyResult {
 const router = useRouter()
 const route = useRoute()
 const idCard = route.params.idCard as string
+const idType = route.query.idType as string || ''
 
 const currentStep = ref(0)
 const isLoading = ref(false)
@@ -624,7 +625,13 @@ const steps = [
 onMounted(async () => {
   if (!idCard) { router.push('/check-status'); return }
   try {
-    const res = await api.get(`/applications/check/${idCard}`)
+    // Build URL with idType parameter if not thai_id
+    let url = `/applications/check/${idCard}`
+    if (idType && idType !== 'thai_id') {
+      url += `?idType=${idType}`
+    }
+
+    const res = await api.get(url)
     const data = res.data?.data
     console.log('data:', data) 
 
@@ -726,6 +733,9 @@ const handleSlipUpload = async (event: Event) => {
     const form = new FormData()
     form.append('slip', file)
     form.append('idCard', idCard)
+    if (idType && idType !== 'thai_id') {
+      form.append('idType', idType)
+    }
 
     const res = await api.post('/enrollments/verify-slip', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -779,6 +789,9 @@ const handleConfirmation = async () => {
   try {
     const formData = new FormData()
     formData.append('idCard', idCard)
+    if (idType && idType !== 'thai_id') {
+      formData.append('idType', idType)
+    }
 
     if (selfHouseRegistration.front) formData.append('self_front', selfHouseRegistration.front)
     if (selfHouseRegistration.back) formData.append('self_back', selfHouseRegistration.back)
@@ -793,7 +806,7 @@ const handleConfirmation = async () => {
     })
 
     // ✅ อัปเดต local status และ generate PDF เสมอ
-    userData.value.status = 'pending_approve'
+    userData.value.status = 'pending_document_review'
 
 
     currentStep.value = 3
