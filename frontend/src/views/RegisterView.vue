@@ -100,13 +100,13 @@
           </div>
 
           <div class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">เลขประจำตัวประชาชน *</label>
+            <label class="text-sm text-gray-600 mb-1 block">{{ idTypeLabel }} *</label>
             <input v-if="form.idType !== 'passport' && form.idType !== 'g_code' && form.idType !== 'other'"
               v-model="form.idCard" type="text" inputmode="numeric"
-              placeholder="เลขประจำตัวประชาชน 13 หลัก" maxlength="13" class="input-field" 
+              placeholder="เลขประจำตัวประชาชน 13 หลัก" maxlength="13" class="input-field"
               @keydown="blockNonDigit" @input="checkDuplicateIdCard(form.idCard)" />
-            <input v-else v-model="form.idCard" type="text" :placeholder="idTypePlaceholder" maxlength="20"
-              class="input-field" @input="form.idCard = form.idCard.toUpperCase(); checkDuplicateIdCard(form.idCard)" />
+            <input v-else v-model="form.idCard" type="text" :placeholder="idTypePlaceholder" :maxlength="dynamicMaxLength"
+              class="input-field" @input="handleIdCardInput" />
             <p class="text-xs text-gray-400 mt-1">{{ idTypeHint || 'กรอกตัวเลข 13 หลัก ไม่มีขีด' }}</p>
             <p v-if="idCardError" class="text-red-500 text-sm mt-1 mb-1">{{ idCardError }}</p>
           </div>
@@ -677,7 +677,7 @@ const idTypeLabel = computed(() => {
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'เช่น 6-1234-56789-12-3',
-    passport: 'เช่น AA1234567', g_code: 'เช่น G-1234567', other: 'หมายเลขเอกสาร',
+    passport: 'ตัวเลข 7-9 ตัว', g_code: 'เช่น G-1234567', other: 'หมายเลขเอกสาร',
   }
   return map[form.idType] || ''
 })
@@ -685,10 +685,21 @@ const idTypePlaceholder = computed(() => {
 const idTypeHint = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'กรอกตัวเลข 13 หลัก ไม่มีขีด', alien_id: 'ตามที่ระบุในบัตรประจำตัวคนต่างด้าว',
-    passport: 'ตัวอักษรและตัวเลข ตามหน้าหนังสือเดินทาง', g_code: 'รหัส G ที่ออกโดยกรมการปกครอง',
+    passport: 'กรอกตัวอักษรและตัวเลข 7-9 ตัว ตามหน้าหนังสือเดินทาง', g_code: 'รหัส G ที่ออกโดยกรมการปกครอง',
     other: 'หมายเลขตามเอกสารราชการที่ใช้แสดงตน',
   }
   return map[form.idType] || ''
+})
+
+const dynamicMaxLength = computed(() => {
+  const map: Record<string, number> = {
+    thai_id: 13,
+    alien_id: 13,
+    passport: 9,
+    g_code: 15,
+    other: 30,
+  }
+  return map[form.idType] || 20
 })
 
 const fixedCourseLabel = computed(() =>
@@ -796,6 +807,32 @@ function blockNonDigit(e: KeyboardEvent) {
   if (!allowed.includes(e.key) && !/^\d$/.test(e.key)) e.preventDefault()
 }
 
+function handleIdCardInput(e: Event) {
+  const input = e.target as HTMLInputElement
+  let value = input.value
+
+  // Format based on ID type
+  if (form.idType === 'passport') {
+    // Only allow letters and numbers, convert to uppercase
+    value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    // Limit to 9 characters
+    value = value.slice(0, 9)
+    // Format: 2 letters + 7 numbers
+    if (value.length > 2) {
+      const letters = value.slice(0, 2)
+      const numbers = value.slice(2).replace(/[^0-9]/g, '')
+      value = letters + numbers
+    }
+  } else if (form.idType === 'g_code' || form.idType === 'other') {
+    // Convert to uppercase for g_code and other
+    value = value.toUpperCase()
+  }
+
+  input.value = value
+  form.idCard = value
+  checkDuplicateIdCard(value)
+}
+
 function formatPhone(e: Event) {
   const digits = (e.target as HTMLInputElement).value.replace(/\D/g, '').slice(0, 10)
   if (digits.length <= 3) form.phone = digits
@@ -832,7 +869,23 @@ async function checkDuplicateIdCard(idCard: string) {
   // Clear error immediately when user changes the value
   idCardError.value = ''
 
-  if (!idCard || idCard.length < 5) {
+  if (!idCard) {
+    return
+  }
+
+  // Check minimum length based on ID type
+  let minIdCardLength = 5
+  if (form.idType === 'thai_id' || form.idType === 'alien_id') {
+    minIdCardLength = 13
+  } else if (form.idType === 'passport') {
+    minIdCardLength = 7
+  } else if (form.idType === 'g_code') {
+    minIdCardLength = 8
+  } else if (form.idType === 'other') {
+    minIdCardLength = 3
+  }
+
+  if (idCard.length < minIdCardLength) {
     return
   }
 
@@ -1011,7 +1064,29 @@ async function runIdCardOCR(file: File) {
 
 function validateStep() {
   if (currentStep.value === 0) {
-    return !!(form.idType && form.idCard && form.idCard.length >= 5
+    let minIdCardLength = 5
+    let maxIdCardLength = 20
+
+    if (form.idType === 'thai_id') {
+      minIdCardLength = 13
+      maxIdCardLength = 13
+    } else if (form.idType === 'alien_id') {
+      minIdCardLength = 13
+      maxIdCardLength = 13
+    } else if (form.idType === 'passport') {
+      minIdCardLength = 7
+      maxIdCardLength = 9
+    } else if (form.idType === 'g_code') {
+      minIdCardLength = 8
+      maxIdCardLength = 15
+    } else if (form.idType === 'other') {
+      minIdCardLength = 3
+      maxIdCardLength = 30
+    }
+
+    const idCardValid = form.idCard.length >= minIdCardLength && form.idCard.length <= maxIdCardLength
+
+    return !!(form.idType && form.idCard && idCardValid
       && form.prefix && form.fullName && form.address
       && form.phone.replace(/\D/g, '').length === 10
       && form.email && form.idFront && form.idBack && !idCardError.value)
