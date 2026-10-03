@@ -677,7 +677,7 @@ const idTypeLabel = computed(() => {
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'เช่น 6-1234-56789-12-3',
-    passport: 'ตัวเลข 7-9 ตัว', g_code: 'ตัวอักษรและตัวเลข ไม่เกิน 13 ตัว', other: 'หมายเลขเอกสาร',
+    passport: 'ตัวเลข 7-9 ตัว', g_code: 'กรอก G-CODE 13 หลัก', other: 'หมายเลขเอกสาร',
   }
   return map[form.idType] || ''
 })
