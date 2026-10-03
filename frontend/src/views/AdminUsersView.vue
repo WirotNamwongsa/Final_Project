@@ -467,7 +467,7 @@
                   </p>
                 </div>
                 <div>
-                  <p class="text-xs text-gray-400 mb-1">เลขบัตรประชาชน</p>
+                  <p class="text-xs text-gray-400 mb-1">{{ idTypeLabel(infoModal.data.id_type) }}</p>
                   <p class="text-sm font-semibold text-gray-700 font-mono tracking-wide">
                     {{ infoModal.data.id_card_number || '-' }}
                   </p>
@@ -1141,6 +1141,17 @@ const prevLevelLabel = (level: string | undefined) => {
     'ม.ปลาย': 'ม.6'
   }
   return map[level] || level
+}
+
+const idTypeLabel = (type: string | undefined) => {
+  const map: Record<string, string> = {
+    thai_id: 'เลขประจำตัวประชาชน',
+    alien_id: 'เลขประจำตัวคนต่างด้าว',
+    passport: 'เลขหนังสือเดินทาง',
+    g_code: 'G-Code',
+    other: 'เลขเอกสารราชการ',
+  }
+  return map[type || ''] || 'หมายเลขประจำตัว'
 }
 
 const openInfoModal = async (row: any) => {

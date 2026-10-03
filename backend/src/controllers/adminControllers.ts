@@ -16,6 +16,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
         a.prefix,
         a.full_name,
         a.id_card_number,
+        a.id_type,
         a.phone,
         a.email,
         a.status,
@@ -43,7 +44,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
       LEFT JOIN documents doc ON doc.app_id = a.app_id
       -- เพิ่ม GROUP BY เพราะใช้ MAX()
       GROUP BY
-        a.app_id, a.prefix, a.full_name, a.id_card_number,
+        a.app_id, a.prefix, a.full_name, a.id_card_number, a.id_type,
         a.phone, a.email, a.status, a.created_at,
         c.cur_id, c.cur_name, c.cur_shortname,
         d.div_id, d.div_name,
@@ -58,6 +59,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
       prefix:         row.prefix,
       full_name:      row.full_name,
       id_card_number: row.id_card_number,
+      id_type:         row.id_type,
       phone:          row.phone,
       email:          row.email,
       status:         row.status,
@@ -218,7 +220,7 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
     const { idCard } = req.params
     const result = await pool.query(`
       SELECT
-        a.app_id, a.prefix, a.full_name, a.id_card_number,
+        a.app_id, a.prefix, a.full_name, a.id_card_number, a.id_type,
         a.phone, a.email, a.address,
         a.prev_school, a.prev_level, a.prev_year, a.gpa,
         a.status, a.created_at,
@@ -242,7 +244,7 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
       LEFT JOIN documents doc ON doc.app_id = a.app_id
       WHERE a.id_card_number = $1
       GROUP BY
-        a.app_id, a.prefix, a.full_name, a.id_card_number,
+        a.app_id, a.prefix, a.full_name, a.id_card_number, a.id_type,
         a.phone, a.email, a.address,
         a.prev_school, a.prev_level, a.prev_year, a.gpa,
         a.status, a.created_at,
