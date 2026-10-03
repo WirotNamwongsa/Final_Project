@@ -677,7 +677,7 @@ const idTypeLabel = computed(() => {
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'เช่น 6-1234-56789-12-3',
-    passport: 'ตัวเลข 7-9 ตัว', g_code: 'เช่น G-1234567', other: 'หมายเลขเอกสาร',
+    passport: 'ตัวเลข 7-9 ตัว', g_code: 'ตัวอักษรและตัวเลข ไม่เกิน 13 ตัว', other: 'หมายเลขเอกสาร',
   }
   return map[form.idType] || ''
 })
@@ -685,7 +685,7 @@ const idTypePlaceholder = computed(() => {
 const idTypeHint = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'กรอกตัวเลข 13 หลัก ไม่มีขีด', alien_id: 'ตามที่ระบุในบัตรประจำตัวคนต่างด้าว',
-    passport: 'กรอกตัวอักษรและตัวเลข 7-9 ตัว ตามหน้าหนังสือเดินทาง', g_code: 'รหัส G ที่ออกโดยกรมการปกครอง',
+    passport: 'กรอกตัวอักษรและตัวเลข 7-9 ตัว ตามหน้าหนังสือเดินทาง', g_code: 'กรอกได้ทั้งตัวอักษรและตัวเลข รวมกันไม่เกิน 13 ตัว',
     other: 'หมายเลขตามเอกสารราชการที่ใช้แสดงตน',
   }
   return map[form.idType] || ''
@@ -696,7 +696,7 @@ const dynamicMaxLength = computed(() => {
     thai_id: 13,
     alien_id: 13,
     passport: 9,
-    g_code: 15,
+    g_code: 13,
     other: 30,
   }
   return map[form.idType] || 20
@@ -823,8 +823,11 @@ function handleIdCardInput(e: Event) {
       const numbers = value.slice(2).replace(/[^0-9]/g, '')
       value = letters + numbers
     }
-  } else if (form.idType === 'g_code' || form.idType === 'other') {
-    // Convert to uppercase for g_code and other
+  } else if (form.idType === 'g_code') {
+    // G-Code accepts letters and digits only, with a combined 13-character limit.
+    value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 13)
+  } else if (form.idType === 'other') {
+    // Convert to uppercase for other document identifiers
     value = value.toUpperCase()
   }
 
