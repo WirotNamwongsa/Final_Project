@@ -1,12 +1,17 @@
 <template>
   <div class="space-y-6">
 
+    <div v-if="loadError" class="bg-red-50 border border-red-200 rounded-2xl p-5 text-center">
+      <p class="text-sm text-red-700">โหลดข้อมูล Dashboard ไม่สำเร็จ จึงยังไม่สามารถแสดงตัวเลขได้</p>
+      <button @click="loadDashboard" class="mt-2 text-sm font-medium text-red-700 underline">ลองโหลดอีกครั้ง</button>
+    </div>
+
     <!-- Stat Cards -->
-    <div v-if="isLoading" class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div v-if="isLoading && !loadError" class="grid grid-cols-2 lg:grid-cols-5 gap-4">
       <div v-for="i in 5" :key="i" class="bg-white rounded-2xl p-5 animate-pulse h-32"></div>
     </div>
 
-    <div v-else class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+    <div v-else-if="!loadError" class="grid grid-cols-2 lg:grid-cols-5 gap-4">
       <!-- ผู้สมัครทั้งหมด -->
       <div class="bg-white rounded-2xl p-5 border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
         <div class="flex items-center justify-between mb-3">
@@ -70,7 +75,7 @@
     </div>
 
     <!-- รายการรอตรวจสอบ + สรุปมอบตัวตามสาขา -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div v-if="!loadError" class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
       <!-- รายการรอตรวจสอบ -->
       <div class="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
@@ -79,7 +84,7 @@
             <div class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></div>
             <h2 class="font-semibold text-gray-800 text-sm">รายการรอตรวจสอบ</h2>
             <span class="text-xs bg-amber-100 text-amber-700 font-semibold px-2 py-0.5 rounded-full">
-              {{ pendingList.length }} รายการ
+              {{ stats.pendingApprove.toLocaleString() }} รายการ
             </span>
           </div>
           <RouterLink to="/admin/users"
@@ -192,6 +197,7 @@ const stats = ref({
 
 const pendingList = ref<any[]>([])
 const enrollmentSummary = ref<any[]>([])
+const loadError = ref(false)
 
 const formatDate = (dateStr: string) => {
   if (!dateStr) return ''
@@ -206,7 +212,7 @@ const progressColor = (current: number, max: number) => {
 }
 
 const statusBadge = (status: string) => {
-  if (status === 'pending_approve') {
+  if (status === 'pending_approve' || status === 'pending_document_review') {
     return {
       label: 'รอตรวจสอบสลิป',
       class: 'text-xs bg-amber-50 text-amber-600 border border-amber-200 px-2 py-0.5 rounded-full font-medium whitespace-nowrap'
@@ -224,7 +230,9 @@ const statusBadge = (status: string) => {
   }
 }
 
-onMounted(async () => {
+const loadDashboard = async () => {
+  isLoading.value = true
+  loadError.value = false
   try {
     const [statsRes, summaryRes, pendingRes] = await Promise.all([
       api.get('/applications/stats'),
@@ -236,7 +244,7 @@ onMounted(async () => {
     const summary: any[] = summaryRes.data?.data ?? []
 
     stats.value.totalApplicants = Number(overview?.total_applicants ?? 0)
-    stats.value.pendingApprove  = Number(overview?.pending_approve ?? 0)
+    stats.value.pendingApprove = Number(overview?.pending_approve ?? 0)
     stats.value.pendingPayment = Number(overview?.pending_payment ?? 0)
     stats.value.onlineEnrolled  = Number(overview?.enrolled ?? 0)
     stats.value.onsiteEnrolled  = summary.reduce((sum: number, r: any) => sum + Number(r.onsite_enrolled || 0), 0)
@@ -246,8 +254,11 @@ onMounted(async () => {
 
   } catch (e) {
     console.error('Dashboard load error:', e)
+    loadError.value = true
   } finally {
     isLoading.value = false
   }
-})
+}
+
+onMounted(loadDashboard)
 </script>

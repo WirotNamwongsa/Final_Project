@@ -15,7 +15,7 @@ export const getPendingApplicants = async (_req: Request, res: Response) => {
       JOIN admission_plan ap ON ap.ap_id = a.ap_id
       JOIN curriculums c ON c.cur_id = ap.cur_id
       JOIN divisions d ON d.div_id = ap.div_id
-      WHERE a.status IN ('pending_approve', 'pending_payment')
+      WHERE a.status IN ('pending_document_review', 'pending_approve')
       ORDER BY a.created_at DESC
       LIMIT 20
     `)
@@ -376,7 +376,7 @@ export const getStats = async (_req: Request, res: Response) => {
     COUNT(*) FILTER (WHERE status != 'enrolled') AS applicant_count,
     COUNT(*) FILTER (WHERE status = 'paid') AS paid,
     COUNT(*) FILTER (WHERE status = 'enrolled') AS enrolled,
-    COUNT(*) FILTER (WHERE status = 'pending_approve') AS pending_approve,
+    COUNT(*) FILTER (WHERE status IN ('pending_document_review', 'pending_approve')) AS pending_approve,
     COUNT(*) FILTER (WHERE status = 'pending_payment') AS pending_payment
   FROM applicants
 `);
