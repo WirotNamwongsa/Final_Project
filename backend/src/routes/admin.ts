@@ -38,7 +38,7 @@ import {
   login
 } from '../controllers/authController'
 import { getApplicants, getApplicantDocuments, getApplicantDetail, deleteApplicant, truncateApplicants, approveSlip, rejectSlip } from '../controllers/adminControllers'
-import { requireAuth, requireSuperAdmin } from '../middleware/auth'
+import { requireAuth, requireAdmin, requireSuperAdmin } from '../middleware/auth'
 
 const router = Router()
 
@@ -80,9 +80,9 @@ router.post('/login', login)
 
 // User routes
 router.get('/users', requireAuth, getUsers)
-router.post('/users', requireAuth, createUser)
+router.post('/users', requireAuth, requireAdmin, createUser)
 router.put('/users/:id', requireAuth, updateUser)
-router.delete('/users/:id', requireAuth, deleteUser)
+router.delete('/users/:id', requireAuth, requireAdmin, deleteUser)
 
 router.get('/applicants', requireAuth, getApplicants)
 router.get('/applicants/detail/:idCard', requireAuth, getApplicantDetail)

@@ -116,7 +116,10 @@
             </div>
             <button
               @click="showAddModal = true"
-              class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 flex items-center gap-2 shadow-sm hover:shadow-md text-sm font-medium"
+              :disabled="isStaff"
+              :title="isStaff ? 'ไม่มีสิทธิ์เพิ่มบัญชีผู้ใช้' : 'เพิ่มสมาชิก'"
+              :class="isStaff ? 'opacity-50 cursor-not-allowed' : 'hover:from-emerald-600 hover:to-teal-600 hover:shadow-md'"
+              class="px-5 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-lg transition-all duration-200 flex items-center gap-2 shadow-sm text-sm font-medium"
             >
               <PlusIcon class="h-4 w-4" />
               เพิ่มสมาชิก
@@ -156,7 +159,10 @@
                     </div>
                     <button
                       @click="showAddModal = true"
-                      class="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2 text-sm"
+                      :disabled="isStaff"
+                      :title="isStaff ? 'ไม่มีสิทธิ์เพิ่มบัญชีผู้ใช้' : 'เพิ่มสมาชิกใหม่'"
+                      :class="isStaff ? 'opacity-50 cursor-not-allowed' : 'hover:bg-emerald-600'"
+                      class="px-4 py-2 bg-emerald-500 text-white rounded-lg transition-colors flex items-center gap-2 text-sm"
                     >
                       <PlusIcon class="h-4 w-4" />เพิ่มสมาชิกใหม่
                     </button>
@@ -174,7 +180,13 @@
                       {{ user.username.charAt(0).toUpperCase() }}
                     </div>
                     <div>
-                      <div class="text-sm font-semibold text-gray-900">{{ user.username }}</div>
+                      <div class="flex items-center gap-2">
+                        <div class="text-sm font-semibold text-gray-900">{{ user.username }}</div>
+                        <span v-if="isCurrentUser(user)"
+                          class="inline-flex items-center px-2.5 py-1 text-xs font-semibold rounded-full bg-emerald-100 text-emerald-800">
+                          ฉัน
+                        </span>
+                      </div>
                       <div class="text-xs text-gray-400 font-mono">{{ user.id.slice(0, 8) }}...</div>
                     </div>
                   </div>
@@ -201,13 +213,19 @@
                   <div class="flex items-center justify-end gap-2">
                     <button
                       @click="editUser(user)"
-                      class="px-3 py-1.5 bg-emerald-100 text-emerald-600 rounded-lg hover:bg-emerald-200 transition-colors flex items-center gap-1 text-xs font-medium"
+                      :disabled="isStaff && !isCurrentUser(user)"
+                      :title="isStaff && !isCurrentUser(user) ? 'แก้ไขได้เฉพาะบัญชีของตัวเอง' : (isStaff ? 'แก้ไขบัญชีของฉัน' : 'แก้ไขผู้ใช้')"
+                      :class="isStaff && !isCurrentUser(user) ? 'opacity-40 cursor-not-allowed' : 'hover:bg-emerald-200'"
+                      class="px-3 py-1.5 bg-emerald-100 text-emerald-600 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                     >
                     <PencilIcon class="w-4 h-4" />
                     </button>
                     <button
                       @click="deleteUser(user)"
-                      class="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg hover:bg-red-200 transition-colors flex items-center gap-1 text-xs font-medium"
+                      :disabled="isStaff"
+                      :title="isStaff ? 'ไม่มีสิทธิ์ลบบัญชีผู้ใช้' : 'ลบผู้ใช้'"
+                      :class="isStaff ? 'opacity-40 cursor-not-allowed' : 'hover:bg-red-200'"
+                      class="px-3 py-1.5 bg-red-100 text-red-500 rounded-lg transition-colors flex items-center gap-1 text-xs font-medium"
                     >
                        <TrashIcon class="w-4 h-4" />
                     </button>
@@ -225,7 +243,7 @@
       <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
         <div class="border-b border-gray-200 px-6 py-4">
           <h3 class="text-lg font-semibold text-gray-900">
-            {{ showAddModal ? 'เพิ่มสมาชิกใหม่' : 'แก้ไขข้อมูลสมาชิก' }}
+            {{ showAddModal ? 'เพิ่มสมาชิกใหม่' : (isStaff ? 'แก้ไขบัญชีของฉัน' : 'แก้ไขข้อมูลสมาชิก') }}
           </h3>
         </div>
         <form @submit.prevent="saveUser" class="p-6 space-y-4">
@@ -249,7 +267,7 @@
               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 text-sm"
             />
           </div>
-          <div>
+          <div v-if="!isStaff">
             <label class="block text-sm font-medium text-gray-700 mb-1">บทบาท</label>
             <select
               v-model="userForm.role"
@@ -361,12 +379,30 @@ import { useAuthStore } from '@/stores/auth'
 import api from '@/services/httpClient'
 
 const authStore = useAuthStore()
+const isStaff = computed(() => authStore.role === 'staff')
+const currentUserId = computed(() => {
+  if (authStore.user?.id) return String(authStore.user.id)
+  const token = authStore.token || localStorage.getItem('auth_token')
+  if (!token) return ''
+  try {
+    const payload = token.split('.')[1]
+    if (!payload) return ''
+    const base64 = payload.replace(/-/g, '+').replace(/_/g, '/')
+    const paddedBase64 = base64.padEnd(Math.ceil(base64.length / 4) * 4, '=')
+    return String(JSON.parse(atob(paddedBase64)).id || '')
+  } catch {
+    return ''
+  }
+})
+
+const isCurrentUser = (user: User) => user.is_current_user === true || user.id === currentUserId.value
 
 interface User {
   id: string
   username: string
   role: 'admin' | 'staff'
   created_at: string
+  is_current_user?: boolean
 }
 
 // State
@@ -464,8 +500,8 @@ const saveUser = async () => {
     } else if (showEditModal.value && selectedUser.value) {
       const payload: Partial<{ username: string; password: string; role: string }> = {
         username: userForm.value.username,
-        role: userForm.value.role
       }
+      if (!isStaff.value) payload.role = userForm.value.role
       if (userForm.value.password) {
         payload.password = userForm.value.password
       }
