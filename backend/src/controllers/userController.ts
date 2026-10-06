@@ -7,7 +7,8 @@ export const getUsers = async (req: Request, res: Response) => {
   try {
     const result = await pool.query(
       `SELECT id, username, role, created_at, id = $1 AS is_current_user
-       FROM users ORDER BY created_at DESC`,
+       FROM users
+       ORDER BY CASE WHEN role = 'admin' THEN 0 ELSE 1 END, created_at DESC`,
       [req.authUser!.id]
     )
     res.json({ success: true, data: result.rows })

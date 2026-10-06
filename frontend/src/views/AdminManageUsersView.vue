@@ -424,7 +424,7 @@ const userForm = ref({
 
 // Computed
 const filteredUsers = computed(() => {
-  let filtered = users.value ?? []
+  let filtered = [...(users.value ?? [])]
 
   if (searchQuery.value) {
     filtered = filtered.filter(user =>
@@ -436,7 +436,11 @@ const filteredUsers = computed(() => {
     filtered = filtered.filter(user => user.role === selectedRole.value)
   }
 
-  return filtered
+  return filtered.sort((a, b) => {
+    const roleOrder = Number(b.role === 'admin') - Number(a.role === 'admin')
+    if (roleOrder !== 0) return roleOrder
+    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  })
 })
 
 // Methods
