@@ -172,7 +172,10 @@
               <tr
                 v-for="user in filteredUsers"
                 :key="user.id"
-                class="hover:bg-emerald-50 transition-colors duration-150"
+                :class="[
+                  'transition-colors duration-150',
+                  isCurrentUser(user) ? 'bg-emerald-50 hover:bg-emerald-100' : 'hover:bg-emerald-50'
+                ]"
               >
                 <td class="px-6 py-4 whitespace-nowrap">
                   <div class="flex items-center gap-3">
@@ -437,9 +440,11 @@ const filteredUsers = computed(() => {
   }
 
   return filtered.sort((a, b) => {
+    const currentUserOrder = Number(isCurrentUser(b)) - Number(isCurrentUser(a))
+    if (currentUserOrder !== 0) return currentUserOrder
     const roleOrder = Number(b.role === 'admin') - Number(a.role === 'admin')
     if (roleOrder !== 0) return roleOrder
-    return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
   })
 })
 
