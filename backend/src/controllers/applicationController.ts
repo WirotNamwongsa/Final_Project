@@ -7,7 +7,7 @@ import { uploadToSupabase } from "../middleware/upload";
 export const getPendingApplicants = async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         a.app_id, a.prefix, a.full_name, a.status, a.created_at,
         c.cur_shortname, d.div_name
       FROM applicants a
@@ -28,7 +28,7 @@ export const getPendingApplicants = async (_req: Request, res: Response) => {
 export const getApplicants = async (_req: Request, res: Response) => {
   try {
     const result = await pool.query(`
-      SELECT 
+      SELECT
         a.app_id, a.prefix, a.full_name, a.status, a.created_at,
         c.cur_shortname, d.div_name
       FROM applicants a
@@ -274,7 +274,7 @@ export const checkStatus = async (req: Request, res: Response) => {
     const result = await pool.query(
       `
       SELECT
-        a.app_id, a.prefix, a.full_name, a.status, a.created_at,
+        a.app_id, a.prefix, a.full_name, a.phone, a.status, a.created_at,
         a.prev_level, a.prev_year,
         c.cur_name, d.div_name,
         p.total_amount, p.required_amount, p.due_date,
