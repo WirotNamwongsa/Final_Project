@@ -107,6 +107,11 @@
           <p class="font-semibold">อยู่ระหว่างตรวจสอบเอกสาร</p>
           <p class="mt-1 text-sm">ส่งเอกสารมอบตัวแล้ว กรุณารอเจ้าหน้าที่ตรวจสอบ ไม่ต้องส่งเอกสารซ้ำ</p>
         </div>
+        <div v-else-if="isAlreadyEnrolled" role="status"
+          class="mb-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-800">
+          <p class="font-semibold">มอบตัวเรียบร้อยแล้ว</p>
+          <p class="mt-1 text-sm">ดำเนินการมอบตัวเสร็จสมบูรณ์แล้ว ไม่ต้องดำเนินการซ้ำ</p>
+        </div>
         <div class="space-y-4">
           <!-- 1.  2.  3.  4.  5.  6. -->
           <div class="bg-gray-50 rounded-xl p-4">
@@ -202,13 +207,13 @@
 
         <!-- Proceed Button -->
         <div class="flex justify-center mt-6">
-          <button v-if="!isPaymentExpired && !isDocumentReviewPending" @click="handleSubmit"
+          <button v-if="!isPaymentExpired && !isDocumentReviewPending && !isAlreadyEnrolled" @click="handleSubmit"
             class="px-8 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all duration-200 transform hover:scale-105">
             ดำเนินการต่อ
           </button>
           <button v-else disabled
             class="px-8 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed">
-            {{ isPaymentExpired ? 'หมดเขตชำระเงิน' : 'อยู่ระหว่างตรวจสอบเอกสาร' }}
+            {{ isPaymentExpired ? 'หมดเขตชำระเงิน' : isDocumentReviewPending ? 'อยู่ระหว่างตรวจสอบเอกสาร' : 'มอบตัวเรียบร้อยแล้ว' }}
           </button>
         </div>
       </div>
@@ -241,6 +246,7 @@ const isPaymentExpired = computed(() => {
     && new Date(applicant.due_date).getTime() <= Date.now()
 })
 const isDocumentReviewPending = computed(() => applicantInfo.value?.status === 'pending_document_review')
+const isAlreadyEnrolled = computed(() => applicantInfo.value?.status === 'enrolled')
 
 const prevLevelLabel = (level: string) => {
   const map: Record<string, string> = {
