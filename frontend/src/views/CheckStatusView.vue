@@ -113,6 +113,11 @@
                 </div>
               </div>
 
+              <div v-if="result.status === 'expired'" class="p-3 bg-red-50 border border-red-200 rounded-xl">
+                <p class="text-xs font-semibold text-red-700">หมดกำหนดชำระเงินและถูกตัดสิทธิ์แล้ว</p>
+                <p class="text-xs text-red-600 mt-1">กรุณาติดต่อวิทยาลัยหากต้องการสอบถามเพิ่มเติม</p>
+              </div>
+
               <!-- Timeline -->
               <div class="mt-4 pt-4 border-t border-gray-100">
                 <p class="text-xs font-medium text-gray-500 mb-3">ความคืบหน้า</p>
@@ -243,6 +248,15 @@ const statusConfig: Record<string, any> = {
     textColor: 'text-amber-700',
     badge: 'bg-amber-100 text-amber-600',
     icon: ClockIcon,
+  },
+  expired: {
+    label: 'หมดเขตชำระเงิน — ถูกตัดสิทธิ์',
+    bg: 'bg-red-50',
+    iconBg: 'bg-red-100',
+    iconColor: 'text-red-500',
+    textColor: 'text-red-700',
+    badge: 'bg-red-100 text-red-600',
+    icon: ExclamationTriangleIcon,
   },
   enrolled: {
     label: 'มอบตัวแล้ว',

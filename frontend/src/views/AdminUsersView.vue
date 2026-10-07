@@ -155,6 +155,7 @@
               class="pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white appearance-none cursor-pointer min-w-[140px] text-gray-700">
               <option value="">ทุกสถานะ</option>
               <option value="pending_payment">สมัครใหม่</option>
+              <option value="expired">หมดเขตชำระเงิน</option>
               <option value="pending_document_review">รอตรวจสอบเอกสาร</option>
               <option value="paid">พร้อมมอบตัว</option>
               <option value="enrolled">มอบตัวแล้ว</option>
@@ -273,12 +274,14 @@
                   <span :class="[
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
                     row.สถานะ === 'enrolled' ? 'bg-green-50 text-green-700 border border-green-200' :
+                      row.สถานะ === 'expired' ? 'bg-red-50 text-red-700 border border-red-200' :
                       row.สถานะ === 'paid' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                         row.สถานะ === 'pending_document_review' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
                           'bg-gray-50 text-gray-500 border border-gray-200'
                   ]">
                     {{
-                      row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
+                    row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
+                        row.สถานะ === 'expired' ? 'หมดเขตชำระเงิน' :
                         row.สถานะ === 'paid' ? 'พร้อมมอบตัว' :
                           row.สถานะ === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
@@ -407,6 +410,7 @@
           <div :class="[
             'px-6 py-5 flex-shrink-0',
             infoModal.status === 'enrolled' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
+              infoModal.status === 'expired' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
               infoModal.status === 'paid' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
                 infoModal.status === 'pending_document_review' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
                   'bg-gradient-to-r from-gray-500 to-gray-600'
@@ -427,6 +431,7 @@
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block"></span>
                     {{
                       infoModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
+                        infoModal.status === 'expired' ? 'หมดเขตชำระเงิน' :
                         infoModal.status === 'paid' ? 'พร้อมมอบตัว' :
                           infoModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
@@ -2109,7 +2114,7 @@ const filteredExportData = computed(() =>
 
     return matchName && matchBranch && matchCur && matchStatus && matchDate && matchEnrolledDate
   }).sort((a, b) => {
-    const statusOrder = { 'pending_document_review': 1, 'pending_payment': 2, 'paid': 3, 'enrolled': 4 }
+    const statusOrder = { 'pending_document_review': 1, 'pending_payment': 2, 'paid': 3, 'enrolled': 4, 'expired': 5 }
     const aStatus = statusOrder[a.สถานะ as keyof typeof statusOrder] || 999
     const bStatus = statusOrder[b.สถานะ as keyof typeof statusOrder] || 999
     return aStatus - bStatus
@@ -2141,7 +2146,8 @@ const getStatusLabel = (status: string): string => {
     'enrolled': 'มอบตัวแล้ว',
     'paid': 'พร้อมมอบตัว',
     'pending_payment': 'สมัครใหม่',
-    'pending_document_review': 'รอตรวจสอบเอกสาร'
+    'pending_document_review': 'รอตรวจสอบเอกสาร',
+    'expired': 'หมดเขตชำระเงิน'
   }
   return labels[status] || status
 }

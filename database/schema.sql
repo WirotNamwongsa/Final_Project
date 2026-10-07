@@ -80,7 +80,7 @@ CREATE TABLE public.users (
 -- ============================================================
 
 -- applicants — ข้อมูลผู้สมัคร (ตารางหลัก)
--- status: 'pending_payment' → 'paid' → 'enrolled'
+-- status: 'pending_payment' → 'paid' → 'pending_document_review' → 'enrolled'; 'expired' for unpaid applications past deadline
 -- prev_level: 'm3' | 'm6' | 'pvc'
 -- id_type: 'thai_id' | 'alien_id' | 'passport' | 'g_code' | 'other'
 CREATE TABLE public.applicants (
@@ -105,6 +105,7 @@ CREATE TABLE public.applicants (
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
     CONSTRAINT applicants_id_card_number_key UNIQUE (id_card_number),
     CONSTRAINT applicants_id_type_check CHECK (id_type IN ('thai_id', 'alien_id', 'passport', 'g_code', 'other')),
+    CONSTRAINT applicants_status_check CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'expired')),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
     CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
@@ -209,5 +210,5 @@ CREATE TRIGGER set_updated_at
 
 -- ============================================================
 -- STATUS FLOW
--- pending_payment → paid → enrolled
+-- pending_payment → paid → pending_document_review → enrolled; pending_payment → expired when due_date passes
 -- ============================================================

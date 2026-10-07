@@ -4,7 +4,7 @@ import { sendSuccess, sendError } from '../utils/response'
 import axios from 'axios'
 import FormData from 'form-data'
 import { uploadToSupabase } from '../middleware/upload'
-import { getPublicUrl } from '../config/supabase'
+import { getPublicUrl, supabase, STORAGE_BUCKET } from '../config/supabase'
 
 // ========================================================
 // POST /enrollments/verify-slip
@@ -29,7 +29,8 @@ export const verifySlip = async (req: Request, res: Response) => {
     }
 
     const applicantResult = await pool.query(`
-      SELECT a.app_id, a.status, p.total_amount
+      SELECT a.app_id, a.status, p.total_amount,
+             (p.due_date <= NOW()) AS payment_overdue
       FROM applicants a
       JOIN payments p ON p.app_id = a.app_id
       ${whereClause}
@@ -39,10 +40,25 @@ export const verifySlip = async (req: Request, res: Response) => {
       return sendError(res, 'ไม่พบข้อมูลผู้สมัคร', 404)
     }
 
-    const { app_id, status, total_amount } = applicantResult.rows[0]
+    const { app_id, status, total_amount, payment_overdue } = applicantResult.rows[0]
 
     if (status === 'enrolled') {
       return sendSuccess(res, { valid: true, message: 'มอบตัวเรียบร้อยแล้ว' })
+    }
+
+    if (status === 'expired' || (status === 'pending_payment' && payment_overdue)) {
+      if (status === 'pending_payment') {
+        await pool.query(`
+          UPDATE applicants a
+          SET status = 'expired'
+          WHERE a.app_id = $1 AND a.status = 'pending_payment'
+            AND EXISTS (
+              SELECT 1 FROM payments p
+              WHERE p.app_id = a.app_id AND p.due_date <= NOW()
+            )
+        `, [app_id])
+      }
+      return sendError(res, 'หมดเขตชำระเงินแล้ว ใบสมัครถูกตัดสิทธิ์', 410)
     }
 
     // Upload to Supabase Storage first
@@ -101,11 +117,33 @@ export const verifySlip = async (req: Request, res: Response) => {
     console.log('⚠️ Slipok API disabled - accepting slip without verification for testing')
 
     // ✅ สลิปผ่าน → save slip_path ด้วย
-   await pool.query(`
-  UPDATE applicants
-  SET status = 'pending_document_review'
-  WHERE app_id = $1
-`, [app_id])
+    if (status === 'pending_payment') {
+      const transition = await pool.query(`
+        UPDATE applicants a
+        SET status = 'pending_document_review'
+        WHERE a.app_id = $1 AND a.status = 'pending_payment'
+          AND EXISTS (
+            SELECT 1 FROM payments p
+            WHERE p.app_id = a.app_id AND p.due_date > NOW()
+          )
+        RETURNING a.app_id
+      `, [app_id])
+
+      if (transition.rowCount === 0) {
+        try {
+          await supabase.storage.from(STORAGE_BUCKET).remove([supabasePath])
+        } catch (cleanupError) {
+          console.error('Failed to remove late payment slip:', cleanupError)
+        }
+        return sendError(res, 'หมดเขตชำระเงินแล้ว ใบสมัครถูกตัดสิทธิ์', 410)
+      }
+    } else {
+      await pool.query(`
+        UPDATE applicants
+        SET status = 'pending_document_review'
+        WHERE app_id = $1
+      `, [app_id])
+    }
 
     await pool.query(`
       UPDATE payments
@@ -186,6 +224,9 @@ export const confirmEnrollment = async (req: Request, res: Response) => {
     // ✅ ต้องเป็น paid หรือ pending_document_review หรือ enrolled เท่านั้น
 if (status === 'pending_payment') {
   return sendError(res, 'กรุณารอ admin ยืนยันการชำระเงินก่อน', 400)
+}
+if (status === 'expired') {
+  return sendError(res, 'หมดเขตชำระเงินแล้ว ใบสมัครถูกตัดสิทธิ์', 410)
 }
 
 await client.query(`

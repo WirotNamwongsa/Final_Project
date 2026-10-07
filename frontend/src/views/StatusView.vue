@@ -97,6 +97,11 @@
         <h3 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-4">
           <UserIcon class="w-5 h-5 text-emerald-500" /> ข้อมูลผู้สมัคร
         </h3>
+        <div v-if="isPaymentExpired" role="alert"
+          class="mb-5 rounded-xl border border-red-300 bg-red-50 p-4 text-red-800">
+          <p class="font-semibold">หมดเขตชำระเงินแล้ว</p>
+          <p class="mt-1 text-sm">ใบสมัครนี้พ้นกำหนดชำระเงิน จึงไม่สามารถดำเนินการมอบตัวต่อได้</p>
+        </div>
         <div class="space-y-4">
           <!-- 1.  2.  3.  4.  5.  6. -->
           <div class="bg-gray-50 rounded-xl p-4">
@@ -192,9 +197,13 @@
 
         <!-- Proceed Button -->
         <div class="flex justify-center mt-6">
-          <button @click="handleSubmit"
+          <button v-if="!isPaymentExpired" @click="handleSubmit"
             class="px-8 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all duration-200 transform hover:scale-105">
             ดำเนินการต่อ
+          </button>
+          <button v-else disabled
+            class="px-8 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed">
+            หมดเขตชำระเงิน
           </button>
         </div>
       </div>
@@ -218,6 +227,14 @@ const errorMessage = ref('')
 const isValidIdCard = ref(false)
 const isLoading = ref(false)
 const applicantInfo = ref<any>(null)
+const isPaymentExpired = computed(() => {
+  const applicant = applicantInfo.value
+  if (!applicant) return false
+  if (applicant.status === 'expired') return true
+  return applicant.status === 'pending_payment'
+    && Boolean(applicant.due_date)
+    && new Date(applicant.due_date).getTime() <= Date.now()
+})
 
 const prevLevelLabel = (level: string) => {
   const map: Record<string, string> = {

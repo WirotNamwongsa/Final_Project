@@ -13,6 +13,7 @@ import adminRoutes from './routes/admin'
 import enrollmentRoutes from './routes/enrollment'
 import { requireAuth } from './middleware/auth'
 import { getPublicUrl } from './config/supabase'
+import { startApplicationExpiryJob } from './services/applicationExpiryService'
 
 dotenv.config()
 
@@ -47,6 +48,8 @@ app.use('/api/auth', authRoutes)
 app.use('/api/applications', applicationRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/enrollments', enrollmentRoutes) 
+
+startApplicationExpiryJob()
 
 app.use('/uploads', async (req, res, next) => {
   try {

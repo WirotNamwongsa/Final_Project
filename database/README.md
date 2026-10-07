@@ -14,6 +14,8 @@
 3. Paste and run the SQL script
 4. Verify all tables are created successfully
 
+For an existing database, apply `add_expired_application_status.sql` after the applicant status migrations. The backend periodically marks unpaid applications as `expired` after their stored payment deadline.
+
 ### 3. Configure Environment Variables
 Update your backend `.env` file with your Supabase credentials:
 

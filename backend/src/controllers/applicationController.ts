@@ -159,7 +159,7 @@ export const createApplication = async (req: Request, res: Response) => {
     }
 
     const planCheck = await client.query(`
-      SELECT ap.plan_num, COUNT(a.app_id) AS count
+      SELECT ap.plan_num, COUNT(a.app_id) FILTER (WHERE a.status <> 'expired') AS count
       FROM admission_plan ap
       LEFT JOIN applicants a ON a.ap_id = ap.ap_id
       WHERE ap.ap_id = $1
@@ -295,8 +295,17 @@ export const checkStatus = async (req: Request, res: Response) => {
     }
 
     const row = result.rows[0]
+    // Derive the public status from the deadline as well as the stored status.
+    // This keeps the status page accurate even before the DB status migration
+    // has been applied and the periodic expiry job can persist `expired`.
+    const effectiveStatus = row.status === 'pending_payment'
+      && row.due_date
+      && new Date(row.due_date).getTime() <= Date.now()
+      ? 'expired'
+      : row.status
     sendSuccess(res, {
       ...row,
+      status: effectiveStatus,
       slip_sender: row.slip_sender ?? '-',
       slip_receiver: row.slip_receiver ?? '-',
       slip_approved: row.slip_approved ?? null,
