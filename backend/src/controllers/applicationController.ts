@@ -267,7 +267,9 @@ export const checkStatus = async (req: Request, res: Response) => {
 
     // If idType is provided, add it to the filter
     if (idType && idType !== 'thai_id') {
-      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2';
+      whereClause = idType === 'passport'
+        ? 'WHERE UPPER(a.id_card_number) = UPPER($1) AND a.id_type = $2'
+        : 'WHERE a.id_card_number = $1 AND a.id_type = $2';
       params = [idCard, idType];
     }
 

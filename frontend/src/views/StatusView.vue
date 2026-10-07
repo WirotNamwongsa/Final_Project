@@ -321,7 +321,8 @@ const resetValidation = () => {
 }
 
 const validateIdCard = (event: Event) => {
-  const value = (event.target as HTMLInputElement).value
+  const input = event.target as HTMLInputElement
+  let value = input.value
 
   // Format input based on ID type
   if (selectedIdType.value === 'thai_id' || selectedIdType.value === 'alien_id') {
@@ -330,7 +331,8 @@ const validateIdCard = (event: Event) => {
       return
     }
   } else if (selectedIdType.value === 'passport') {
-    (event.target as HTMLInputElement).value = value.toUpperCase()
+    value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    input.value = value
   }
 
   idCard.value = value
