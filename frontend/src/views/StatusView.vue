@@ -396,11 +396,7 @@ const checkApplicant = async () => {
   errorMessage.value = ''
 
   try {
-    // Build URL with idType parameter if not thai_id
-    let url = `/applications/check/${idCard.value}`
-    if (selectedIdType.value && selectedIdType.value !== 'thai_id') {
-      url += `?idType=${selectedIdType.value}`
-    }
+    const url = `/applications/check/${encodeURIComponent(idCard.value)}?idType=${encodeURIComponent(selectedIdType.value)}`
 
     const res = await api.get(url)
     applicantInfo.value = res.data?.data || res.data
@@ -440,10 +436,7 @@ const formatDate = (dateString: string) => {
 
 const handleSubmit = async () => {
   if (!applicantInfo.value) return
-  let url = `/enrollment/${idCard.value}`
-  if (selectedIdType.value && selectedIdType.value !== 'thai_id') {
-    url += `?idType=${selectedIdType.value}`
-  }
+  const url = `/enrollment/${encodeURIComponent(idCard.value)}?idType=${encodeURIComponent(selectedIdType.value)}`
   router.push(url)
 }
 </script>

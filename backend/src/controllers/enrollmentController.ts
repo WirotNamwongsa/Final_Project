@@ -22,9 +22,11 @@ export const verifySlip = async (req: Request, res: Response) => {
     let whereClause = 'WHERE a.id_card_number = $1'
     let params: any[] = [idCard]
 
-    // If idType is provided and not thai_id, add it to the filter
-    if (idType && idType !== 'thai_id') {
-      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2'
+    // When a document type is selected, require an exact type match.
+    if (idType) {
+      whereClause = idType === 'passport'
+        ? 'WHERE UPPER(a.id_card_number) = UPPER($1) AND a.id_type = $2'
+        : 'WHERE a.id_card_number = $1 AND a.id_type = $2'
       params = [idCard, idType]
     }
 
@@ -203,9 +205,11 @@ export const confirmEnrollment = async (req: Request, res: Response) => {
     let whereClause = 'WHERE a.id_card_number = $1'
     let params: any[] = [idCard]
 
-    // If idType is provided and not thai_id, add it to the filter
-    if (idType && idType !== 'thai_id') {
-      whereClause = 'WHERE a.id_card_number = $1 AND a.id_type = $2'
+    // When a document type is selected, require an exact type match.
+    if (idType) {
+      whereClause = idType === 'passport'
+        ? 'WHERE UPPER(a.id_card_number) = UPPER($1) AND a.id_type = $2'
+        : 'WHERE a.id_card_number = $1 AND a.id_type = $2'
       params = [idCard, idType]
     }
 

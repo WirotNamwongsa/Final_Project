@@ -625,11 +625,7 @@ const steps = [
 onMounted(async () => {
   if (!idCard) { router.push('/check-status'); return }
   try {
-    // Build URL with idType parameter if not thai_id
-    let url = `/applications/check/${idCard}`
-    if (idType && idType !== 'thai_id') {
-      url += `?idType=${idType}`
-    }
+    const url = `/applications/check/${encodeURIComponent(idCard)}?idType=${encodeURIComponent(idType)}`
 
     const res = await api.get(url)
     const data = res.data?.data
@@ -733,9 +729,7 @@ const handleSlipUpload = async (event: Event) => {
     const form = new FormData()
     form.append('slip', file)
     form.append('idCard', idCard)
-    if (idType && idType !== 'thai_id') {
-      form.append('idType', idType)
-    }
+    form.append('idType', idType)
 
     const res = await api.post('/enrollments/verify-slip', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
@@ -789,9 +783,7 @@ const handleConfirmation = async () => {
   try {
     const formData = new FormData()
     formData.append('idCard', idCard)
-    if (idType && idType !== 'thai_id') {
-      formData.append('idType', idType)
-    }
+    formData.append('idType', idType)
 
     if (selfHouseRegistration.front) formData.append('self_front', selfHouseRegistration.front)
     if (selfHouseRegistration.back) formData.append('self_back', selfHouseRegistration.back)
