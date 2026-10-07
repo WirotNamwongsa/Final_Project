@@ -285,7 +285,6 @@ async function checkStatus() {
       enrolledAt: data.enrolled_at ? formatDate(data.enrolled_at) : null,
       raw: data,
     }
-    console.log('🔍 raw data:', result.value.raw)
     const isPaid = data.status === 'paid' || data.status === 'enrolled' || data.status === 'pending_document_review'
     const isPendingReview = data.status === 'pending_document_review'
     const isEnrolled = data.status === 'enrolled'
@@ -590,9 +589,6 @@ try {
   }
 
   // ════ คอลัมน์ขวา: รูปสลิป ════════════════════════════════
-  const slipUrl: string | undefined =
-    raw.slip_path || raw.slip_url || raw.payment_slip_url || raw.slip_image
-
   const boxH = 100   // ความสูงกรอบสลิป
   doc.setDrawColor(200, 200, 200)
   doc.setLineWidth(0.4)
@@ -605,46 +601,11 @@ try {
   doc.text('หลักฐานการชำระเงิน', colRightX + colRightW / 2, sectionStartY + 7, { align: 'center' })
   doc.setTextColor(0, 0, 0)
 
-  if (slipUrl) {
-    try {
-      const resolvedUrl = slipUrl.startsWith('http')
-        ? slipUrl
-        : `${(import.meta.env.VITE_API_URL as string)?.replace(/\/api$/, '') || 'http://localhost:13001'}${slipUrl}`
-
-      const token = localStorage.getItem('auth_token')
-      const imgRes = await fetch(resolvedUrl, {
-        headers: token ? { Authorization: `Bearer ${token}` } : {}
-      })
-      const imgBuffer = await imgRes.arrayBuffer()
-      const imgBytes = new Uint8Array(imgBuffer)
-      let binary = ''
-      imgBytes.forEach(b => binary += String.fromCharCode(b))
-      const imgBase64 = btoa(binary)
-      const isPng = resolvedUrl.toLowerCase().includes('.png')
-
-      // รูปอยู่ใน boxH - header (7mm) - padding
-      doc.addImage(
-        imgBase64,
-        isPng ? 'PNG' : 'JPEG',
-        colRightX + 3,
-        sectionStartY + 11,
-        colRightW - 6,
-        boxH - 14
-      )
-    } catch {
-      doc.setFontSize(11)
-      doc.setFont('THSarabun', 'normal')
-      doc.setTextColor(150, 150, 150)
-      doc.text('ไม่สามารถโหลดรูปสลิปได้', colRightX + colRightW / 2, sectionStartY + 55, { align: 'center' })
-      doc.setTextColor(0, 0, 0)
-    }
-  } else {
-    doc.setFontSize(11)
-    doc.setFont('THSarabun', 'normal')
-    doc.setTextColor(150, 150, 150)
-    doc.text('ไม่พบหลักฐานการชำระเงิน', colRightX + colRightW / 2, sectionStartY + 55, { align: 'center' })
-    doc.setTextColor(0, 0, 0)
-  }
+  doc.setFontSize(11)
+  doc.setFont('THSarabun', 'normal')
+  doc.setTextColor(150, 150, 150)
+  doc.text('ไม่แสดงหลักฐานการชำระเงินในเอกสารสาธารณะ', colRightX + colRightW / 2, sectionStartY + 55, { align: 'center' })
+  doc.setTextColor(0, 0, 0)
 
   // ─── ใช้ y ที่มากกว่า ─────────────────────────────────────
   y = Math.max(y, sectionStartY + boxH + 8)

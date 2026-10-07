@@ -2,7 +2,6 @@ import { Request, Response } from "express";
 import pool from "../config/db";
 import { sendSuccess, sendError } from "../utils/response";
 import { uploadToSupabase } from "../middleware/upload";
-import { getPublicUrl } from "../config/supabase";
 
 
 export const getPendingApplicants = async (_req: Request, res: Response) => {
@@ -282,29 +281,13 @@ export const checkStatus = async (req: Request, res: Response) => {
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
         p.slip_approved,
         p.slip_error_message,
-        e.enrolled_at, e.verified_at AS enroll_verified_at,
-        MAX(CASE WHEN doc.doc_type = 'self_house_front'   THEN doc.file_path END) AS self_front_url,
-        MAX(CASE WHEN doc.doc_type = 'self_house_back'    THEN doc.file_path END) AS self_back_url,
-        MAX(CASE WHEN doc.doc_type = 'father_house_front' THEN doc.file_path END) AS father_front_url,
-        MAX(CASE WHEN doc.doc_type = 'father_house_back'  THEN doc.file_path END) AS father_back_url,
-        MAX(CASE WHEN doc.doc_type = 'mother_house_front' THEN doc.file_path END) AS mother_front_url,
-        MAX(CASE WHEN doc.doc_type = 'mother_house_back'  THEN doc.file_path END) AS mother_back_url,
-        MAX(CASE WHEN doc.doc_type = 'payment_slip'       THEN doc.file_path END) AS payment_slip_url
+        e.enrolled_at, e.verified_at AS enroll_verified_at
       FROM applicants a
       JOIN curriculums c ON c.cur_id = a.cur_id
       JOIN divisions d ON d.div_id = a.div_id
       LEFT JOIN payments p ON p.app_id = a.app_id
       LEFT JOIN enrollments e ON e.app_id = a.app_id
-      LEFT JOIN documents doc ON doc.app_id = a.app_id
       ${whereClause}
-      GROUP BY
-        a.app_id, a.prefix, a.full_name, a.status, a.created_at,
-        a.prev_level, a.prev_year,
-        c.cur_name, d.div_name,
-        p.total_amount, p.required_amount, p.due_date,
-        p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
-        p.slip_approved, p.slip_error_message,
-        e.enrolled_at, e.verified_at
     `, params)
 
     if (result.rows.length === 0) {
@@ -312,25 +295,13 @@ export const checkStatus = async (req: Request, res: Response) => {
     }
 
     const row = result.rows[0]
-const toUrl = (filePath: string | null) => {
-  if (!filePath) return null
-  return getPublicUrl(filePath)
-}
-
-sendSuccess(res, {
-  ...row,
-  self_front_url:   toUrl(row.self_front_url),
-  self_back_url:    toUrl(row.self_back_url),
-  father_front_url: toUrl(row.father_front_url),
-  father_back_url:  toUrl(row.father_back_url),
-  mother_front_url: toUrl(row.mother_front_url),
-  mother_back_url:  toUrl(row.mother_back_url),
-  payment_slip_url: toUrl(row.payment_slip_url),
-  slip_sender: row.slip_sender ?? '-',
-  slip_receiver: row.slip_receiver ?? '-',
-    slip_approved:     row.slip_approved ?? null,       
-      slip_error_message: row.slip_error_message ?? '', 
-})
+    sendSuccess(res, {
+      ...row,
+      slip_sender: row.slip_sender ?? '-',
+      slip_receiver: row.slip_receiver ?? '-',
+      slip_approved: row.slip_approved ?? null,
+      slip_error_message: row.slip_error_message ?? '',
+    })
 
 
   } catch (err) {
