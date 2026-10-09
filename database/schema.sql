@@ -104,13 +104,17 @@ CREATE TABLE public.applicants (
     updated_at     timestamptz  DEFAULT now() NULL,
     id_type        varchar(20)  NOT NULL DEFAULT 'thai_id',
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
-    CONSTRAINT applicants_id_card_number_key UNIQUE (id_card_number),
     CONSTRAINT applicants_id_type_check CHECK (id_type IN ('thai_id', 'alien_id', 'passport', 'g_code', 'other')),
     CONSTRAINT applicants_status_check CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'revision_required', 'pending_approve', 'expired')),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
     CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
 );
+
+-- Keep one current (non-expired) application per identity document while retaining expired history.
+CREATE UNIQUE INDEX applicants_active_id_card_number_key
+    ON public.applicants (id_card_number)
+    WHERE status <> 'expired';
 
 -- documents — ไฟล์เอกสารแนบ (FK → applicants, CASCADE DELETE)
 -- doc_type: 'id_front' | 'id_back' | 'certificate_front' | 'certificate_back'

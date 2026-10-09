@@ -96,11 +96,14 @@ CREATE TABLE IF NOT EXISTS public.applicants (
     id_type        varchar(20)  NOT NULL DEFAULT 'thai_id',
     prev_branch    int4         NULL,
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
-    CONSTRAINT applicants_id_card_number_key UNIQUE (id_card_number),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
     CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
 );
+
+CREATE UNIQUE INDEX applicants_active_id_card_number_key
+    ON public.applicants (id_card_number)
+    WHERE status <> 'expired';
 
 -- documents — ไฟล์เอกสารแนบ (FK → applicants, CASCADE DELETE)
 -- doc_type: 'id_front' | 'id_back' | 'certificate_front' | 'certificate_back'

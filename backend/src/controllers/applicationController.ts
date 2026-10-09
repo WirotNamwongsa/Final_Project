@@ -150,7 +150,7 @@ export const createApplication = async (req: Request, res: Response) => {
     } = req.body;
 
     const existing = await client.query(
-      "SELECT app_id FROM applicants WHERE id_card_number = $1",
+      "SELECT app_id FROM applicants WHERE id_card_number = $1 AND status <> 'expired' LIMIT 1",
       [id_card_number],
     );
     if (existing.rows.length > 0) {
@@ -242,6 +242,9 @@ export const createApplication = async (req: Request, res: Response) => {
 
   } catch (err: any) {
     await client.query("ROLLBACK");
+    if (err.code === '23505' && err.constraint === 'applicants_active_id_card_number_key') {
+      return sendError(res, "เลขเอกสารนี้มีใบสมัครที่ยังดำเนินการอยู่แล้ว", 400);
+    }
     console.error('❌ createApplication error:', err.message)
     console.error('❌ detail:', err.detail)
     console.error('❌ hint:', err.hint)
@@ -290,6 +293,8 @@ export const checkStatus = async (req: Request, res: Response) => {
       LEFT JOIN payments p ON p.app_id = a.app_id
       LEFT JOIN enrollments e ON e.app_id = a.app_id
       ${whereClause}
+      ORDER BY (a.status = 'expired') ASC, a.created_at DESC
+      LIMIT 1
     `, params)
 
     if (result.rows.length === 0) {
@@ -331,7 +336,7 @@ export const checkDuplicateIdCard = async (req: Request, res: Response) => {
     }
 
     const result = await pool.query(
-      "SELECT app_id, full_name, status FROM applicants WHERE id_card_number = $1",
+      "SELECT app_id, full_name, status FROM applicants WHERE id_card_number = $1 AND status <> 'expired' LIMIT 1",
       [id_card_number]
     );
 
@@ -431,7 +436,8 @@ export const enrollApplication = async (req: Request, res: Response) => {
     }
 
     const findResult = await client.query(
-      `SELECT app_id, status FROM applicants WHERE id_card_number = $1`,
+      `SELECT app_id, status FROM applicants WHERE id_card_number = $1
+       ORDER BY (status = 'expired') ASC, created_at DESC LIMIT 1`,
       [idCard]
     )
 

@@ -36,6 +36,8 @@ export const verifySlip = async (req: Request, res: Response) => {
       FROM applicants a
       JOIN payments p ON p.app_id = a.app_id
       ${whereClause}
+      ORDER BY (a.status = 'expired') ASC, a.created_at DESC
+      LIMIT 1
     `, params)
 
     if (applicantResult.rows.length === 0) {
@@ -218,6 +220,8 @@ export const confirmEnrollment = async (req: Request, res: Response) => {
       SELECT a.app_id, a.status
       FROM applicants a
       ${whereClause}
+      ORDER BY (a.status = 'expired') ASC, a.created_at DESC
+      LIMIT 1
     `, params)
 
     if (applicant.rows.length === 0) {
@@ -326,7 +330,12 @@ export const getEnrollmentStatus = async (req: Request, res: Response) => {
   FROM applicant_expenses ae
   JOIN expense_detail ed ON ed.exp_id = ae.exp_id
   JOIN applicants a ON a.app_id = ae.app_id
-  WHERE a.id_card_number = $1
+  WHERE a.app_id = (
+    SELECT app_id FROM applicants
+    WHERE id_card_number = $1
+    ORDER BY (status = 'expired') ASC, created_at DESC
+    LIMIT 1
+  )
   ORDER BY ae.ae_id
 `, [idCard])
 
@@ -442,7 +451,12 @@ export const getOrdersByIdCard = async (req: Request, res: Response) => {
       FROM applicant_expenses ae
       JOIN expense_detail ed ON ed.exp_id = ae.exp_id
       JOIN applicants a ON a.app_id = ae.app_id
-      WHERE a.id_card_number = $1
+      WHERE a.app_id = (
+        SELECT app_id FROM applicants
+        WHERE id_card_number = $1
+        ORDER BY (status = 'expired') ASC, created_at DESC
+        LIMIT 1
+      )
       ORDER BY ae.ae_id
     `, [idCard])
 

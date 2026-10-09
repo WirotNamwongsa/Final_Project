@@ -16,6 +16,7 @@
 
 For an existing database, apply `add_expired_application_status.sql` after the applicant status migrations. The backend periodically marks unpaid applications as `expired` after their stored payment deadline.
 Then apply `add_revision_required_status.sql`. It adds the `revision_required` status and a separate review reason field for rejected enrollment documents. Run this migration last because it recreates the applicant status constraint with all supported statuses.
+To allow an applicant to apply again after their previous application expires, apply `allow_reapply_after_expired.sql` after the status migrations. It preserves the expired record and permits only one non-expired application per identity document number.
 
 ### 3. Configure Environment Variables
 Update your backend `.env` file with your Supabase credentials:

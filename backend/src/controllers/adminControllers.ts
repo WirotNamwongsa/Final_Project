@@ -256,6 +256,8 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
         p.slip_approved, p.slip_error_message,
         e.enrolled_at, e.verified_at
+      ORDER BY (a.status = 'expired') ASC, a.created_at DESC
+      LIMIT 1
     `, [idCard])
 
     if (result.rows.length === 0) {
