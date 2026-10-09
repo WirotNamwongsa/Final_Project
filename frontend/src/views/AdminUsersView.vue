@@ -656,10 +656,6 @@
               </button>
 
               <template v-else-if="infoModal.status === 'enrolled'">
-                <button @click="openDocModalFromInfo"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-blue-200">
-                  <Eye class="w-4 h-4" /> ดูเอกสาร
-                </button>
                 <button @click="printEnrollmentCert"
                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-emerald-200">
                   <BookCheck class="w-4 h-4" /> เอกสารมอบตัว
