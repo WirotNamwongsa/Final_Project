@@ -114,8 +114,11 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
     ['สาขาวิชา', data.branchName || '-'],
   ]
   leftRows.forEach(([lbl, val]) => {
-    bold(); text(`${lbl} :`, ML + 3, yL)
-    normal(); text(val, ML + 44, yL)
+    const labelText = `${lbl} :`
+    const labelX = ML + 3
+    bold(); text(labelText, labelX, yL)
+    const valueX = labelX + doc.getTextWidth(labelText) + 2
+    normal(); text(val, valueX, yL)
     yL += rowGap
   })
 
@@ -126,9 +129,15 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
     ['', 'วิทยาลัยเทคนิคเลย'],
     ['ยอดที่ต้องชำระ', `${data.totalPrice.toLocaleString()} บาท`],
   ]
+  let rightValueX = col2X + 32
   rightRows.forEach(([lbl, val]) => {
-    if (lbl) { bold(); text(`${lbl} :`, col2X + 3, yR) }
-    normal(); text(val, col2X + 32, yR)
+    if (lbl) {
+      const labelText = `${lbl} :`
+      const labelX = col2X + 3
+      bold(); text(labelText, labelX, yR)
+      rightValueX = labelX + doc.getTextWidth(labelText) + 2
+    }
+    normal(); text(val, rightValueX, yR)
     yR += rowGap
   })
 
