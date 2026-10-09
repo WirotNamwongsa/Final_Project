@@ -335,39 +335,76 @@ export const approveSlip = async (req: Request, res: Response) => {
   try {
     await client.query('BEGIN')
 
+    // Lock the applicant row so the approval decision is based on the current state.
+    const applicantResult = await client.query(
+      `SELECT a.status, p.slip_path, p.slip_approved
+       FROM applicants a
+       LEFT JOIN payments p ON p.app_id = a.app_id
+       WHERE a.app_id = $1
+       FOR UPDATE OF a`,
+      [app_id]
+    )
+
+    if (applicantResult.rows.length === 0) {
+      await client.query('ROLLBACK')
+      return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลผู้สมัคร' })
+    }
+
+    const applicant = applicantResult.rows[0]
+    if (applicant.status === 'enrolled' && applicant.slip_approved === true) {
+      await client.query('COMMIT')
+      return res.json({ success: true, message: 'อนุมัติแล้ว' })
+    }
+    if (applicant.status === 'expired') {
+      await client.query('ROLLBACK')
+      return res.status(410).json({ success: false, message: 'ใบสมัครหมดเขตชำระเงินแล้ว ไม่สามารถอนุมัติได้' })
+    }
+    if (applicant.status !== 'pending_document_review') {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ success: false, message: 'อนุมัติได้เฉพาะใบสมัครที่อยู่ระหว่างตรวจสอบเอกสาร' })
+    }
+    if (!applicant.slip_path) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ success: false, message: 'ไม่พบไฟล์สลิปสำหรับตรวจสอบ' })
+    }
+
     // อัปเดตสถานะสลิป
-    await client.query(
+    const paymentUpdate = await client.query(
       `UPDATE payments
        SET slip_approved = true,
            slip_error_message = NULL,
            verified_at = NOW(),
            verified_by = $1
-       WHERE app_id = $2`,
+       WHERE app_id = $2 AND slip_path IS NOT NULL`,
       [verified_by || 'admin', app_id]
     )
+    if (paymentUpdate.rowCount === 0) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ success: false, message: 'ไม่พบไฟล์สลิปสำหรับตรวจสอบ' })
+    }
 
-    // อัปเดตสถานะผู้สมัครเป็น enrolled
-    await client.query(
+    // Only a pending document review can be approved into enrolled.
+    const applicantUpdate = await client.query(
       `UPDATE applicants
        SET status = 'enrolled',
            updated_at = NOW()
-       WHERE app_id = $1`,
+       WHERE app_id = $1 AND status = 'pending_document_review'
+       RETURNING app_id`,
       [app_id]
     )
-
-    // บันทึกการมอบตัวใน enrollments table
-    const existingEnrollment = await client.query(
-      `SELECT enroll_id FROM enrollments WHERE app_id = $1`,
-      [app_id]
-    )
-
-    if (existingEnrollment.rows.length === 0) {
-      await client.query(
-        `INSERT INTO enrollments (app_id, enrolled_at, verified_at, verified_by)
-         VALUES ($1, NOW(), NOW(), $2)`,
-        [app_id, verified_by || 'admin']
-      )
+    if (applicantUpdate.rowCount === 0) {
+      await client.query('ROLLBACK')
+      return res.status(409).json({ success: false, message: 'สถานะใบสมัครเปลี่ยนไปแล้ว กรุณาตรวจสอบอีกครั้ง' })
     }
+
+    await client.query(
+      `INSERT INTO enrollments (app_id, enrolled_at, verified_at, verified_by)
+       VALUES ($1, NOW(), NOW(), $2)
+       ON CONFLICT (app_id) DO UPDATE SET
+         verified_at = NOW(),
+         verified_by = EXCLUDED.verified_by`,
+      [app_id, verified_by || 'admin']
+    )
 
     await client.query('COMMIT')
 

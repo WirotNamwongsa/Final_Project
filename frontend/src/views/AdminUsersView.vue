@@ -1363,7 +1363,11 @@ const rejectSlip = async () => {
     showRejectSlipModal.value = false
     rejectReason.value = ''
 
-    showSuccessDialog('ปฏิเสธสลิปเรียบร้อยแล้ว')
+    showSuccessDialog(
+      'สลิปถูกปฏิเสธแล้ว ผู้สมัครสามารถตรวจสอบเหตุผลและส่งใหม่ได้',
+      undefined,
+      'ปฏิเสธการมอบตัวสำเร็จแล้ว!'
+    )
 
   } catch (err) {
     console.error('ปฏิเสธสลิปไม่สำเร็จ:', err)
@@ -1596,7 +1600,11 @@ const downloadAsOrderPDF = async () => {
   }
 }
 
-const showSuccessDialog = (message: string, student?: any) => {
+const showSuccessDialog = (
+  message: string,
+  student?: any,
+  title = 'การมอบตัวสำเร็จแล้ว!'
+) => {
   const overlay = document.createElement('div')
   overlay.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/60'
 
@@ -1619,7 +1627,7 @@ const showSuccessDialog = (message: string, student?: any) => {
           </svg>
         </div>
         <div>
-          <h3 class="text-2xl font-bold text-gray-900">การมอบตัวสำเร็จแล้ว!</h3>
+          <h3 class="text-2xl font-bold text-gray-900">${title}</h3>
           <p class="text-sm text-gray-600 mt-2">${message}</p>
         </div>
       </div>
