@@ -56,11 +56,21 @@
                 id="password"
                 v-model="loginForm.password"
                 name="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 required
-                class="appearance-none block w-full pl-10 pr-3 py-3 border-2 border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white shadow-sm focus:shadow-md"
+                class="appearance-none block w-full pl-10 pr-12 py-3 border-2 border-gray-300 rounded-xl placeholder-gray-500 text-gray-900 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-200 bg-white shadow-sm focus:shadow-md"
                 placeholder="กรอกรหัสผ่าน"
               />
+              <button
+                type="button"
+                :aria-label="showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'"
+                :aria-pressed="showPassword"
+                @click="showPassword = !showPassword"
+                class="absolute inset-y-0 right-0 px-3 flex items-center text-gray-400 hover:text-green-600 focus:outline-none focus:text-green-600"
+              >
+                <EyeSlashIcon v-if="showPassword" class="h-5 w-5" />
+                <EyeIcon v-else class="h-5 w-5" />
+              </button>
             </div>
           </div>
 
@@ -111,7 +121,9 @@ import {
   LockClosedIcon, 
   UserIcon, 
   ExclamationTriangleIcon, 
-  ArrowLeftIcon 
+  ArrowLeftIcon,
+  EyeIcon,
+  EyeSlashIcon,
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
@@ -125,6 +137,7 @@ const loginForm = ref({
 
 const isLoading = ref(false)
 const errorMessage = ref('')
+const showPassword = ref(false)
 
 const handleLogin = async () => {
   isLoading.value = true
