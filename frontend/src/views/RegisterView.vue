@@ -676,7 +676,7 @@ const idTypeLabel = computed(() => {
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'กรอกเลขบัตรประจำตัวประชาชนคนต่างด้าว',
-    passport: 'กรอกเลขหนังสือเดินทาง', g_code: 'กรอก G-CODE', other: 'กรอกหมายเลขเอกสาร',
+    passport: 'กรอกเลขหนังสือเดินทาง', g_code: 'กรอก G-CODE', other: 'กรอกหมายเลขเอกสารราชการอื่นๆ',
   }
   return map[form.idType] || ''
 })
@@ -685,7 +685,7 @@ const idTypeHint = computed(() => {
   const map: Record<string, string> = {
     thai_id: 'กรอกตัวเลข 13 หลัก ไม่มีขีด', alien_id: 'ตามที่ระบุในบัตรประจำตัวคนต่างด้าว',
     passport: 'กรอกตัวอักษรและตัวเลข 7-9 ตัว ตามหน้าหนังสือเดินทาง', g_code: 'กรอกได้ทั้งตัวอักษรและตัวเลข รวมกันไม่เกิน 13 ตัว',
-    other: 'หมายเลขตามเอกสารราชการที่ใช้แสดงตน',
+    other: 'กรอกได้ตั้งแต่ 5 ถึง 20 ตัวอักษร',
   }
   return map[form.idType] || ''
 })
@@ -696,7 +696,7 @@ const dynamicMaxLength = computed(() => {
     alien_id: 13,
     passport: 9,
     g_code: 13,
-    other: 30,
+    other: 20,
   }
   return map[form.idType] || 20
 })
@@ -826,8 +826,8 @@ function handleIdCardInput(e: Event) {
     // G-Code accepts letters and digits only, with a combined 13-character limit.
     value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 13)
   } else if (form.idType === 'other') {
-    // Convert to uppercase for other document identifiers
-    value = value.toUpperCase()
+    // Other official document numbers must contain 5–20 characters.
+    value = value.toUpperCase().slice(0, 20)
   }
 
   input.value = value
@@ -884,7 +884,7 @@ async function checkDuplicateIdCard(idCard: string) {
   } else if (form.idType === 'g_code') {
     minIdCardLength = 8
   } else if (form.idType === 'other') {
-    minIdCardLength = 3
+    minIdCardLength = 5
   }
 
   if (idCard.length < minIdCardLength) {
@@ -1082,8 +1082,8 @@ function validateStep() {
       minIdCardLength = 8
       maxIdCardLength = 15
     } else if (form.idType === 'other') {
-      minIdCardLength = 3
-      maxIdCardLength = 30
+      minIdCardLength = 5
+      maxIdCardLength = 20
     }
 
     const idCardValid = form.idCard.length >= minIdCardLength && form.idCard.length <= maxIdCardLength
