@@ -35,11 +35,11 @@
         </h2>
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-2">
-            <p class="text-sm font-medium text-gray-700 mb-3">อัพโหลดภาพบัตรประชาชน *</p>
+            <p class="text-sm font-medium text-gray-700 mb-3">อัพโหลดภาพบัตรประชาชน</p>
 
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="text-sm text-gray-600 mb-1 block">ด้านหน้า *</label>
+                <label class="text-sm text-gray-600 mb-1 block">ด้านหน้า</label>
                 <div class="upload-box relative cursor-pointer"
                   :class="form.idFront ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'"
                   @click="openUploadPicker('idFront')">
@@ -74,7 +74,7 @@
                 </div>
               </div>
               <div>
-                <label class="text-sm text-gray-600 mb-1 block">ด้านหลัง *</label>
+                <label class="text-sm text-gray-600 mb-1 block">ด้านหลัง</label>
                 <div class="upload-box cursor-pointer"
                   :class="form.idBack ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'"
                   @click="openUploadPicker('idBack')">
@@ -89,7 +89,7 @@
           <!-- เลขบัตรประจำตัวประชาชน — แสดงเสมอ (OCR fills this) -->
 
           <div class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">ประเภทเอกสารแสดงตน *</label>
+            <label class="text-sm text-gray-600 mb-1 block">ประเภทเอกสารแสดงตน</label>
             <select v-model="form.idType" class="input-field" @change="form.idCard = ''">
               <option value="thai_id">บัตรประจำตัวประชาชนไทย</option>
               <option value="alien_id">บัตรประจำตัวคนต่างด้าว</option>
@@ -100,18 +100,17 @@
           </div>
 
           <div class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">{{ idTypeLabel }} *</label>
-            <input v-if="form.idType !== 'passport' && form.idType !== 'g_code' && form.idType !== 'other'"
+            <label class="text-sm text-gray-600 mb-1 block">{{ idTypeLabel }}</label>
+            <input v-if="form.idType !== 'alien_id' && form.idType !== 'passport' && form.idType !== 'g_code' && form.idType !== 'other'"
               v-model="form.idCard" type="text" inputmode="numeric"
-              placeholder="เลขประจำตัวประชาชน 13 หลัก" maxlength="13" class="input-field"
+              placeholder="กรอกเลขบัตรประจำตัวประชาชนไทย" maxlength="13" class="input-field"
               @keydown="blockNonDigit" @input="checkDuplicateIdCard(form.idCard)" />
             <input v-else v-model="form.idCard" type="text" :placeholder="idTypePlaceholder" :maxlength="dynamicMaxLength"
               class="input-field" @input="handleIdCardInput" />
-            <p class="text-xs text-gray-400 mt-1">{{ idTypeHint || 'กรอกตัวเลข 13 หลัก ไม่มีขีด' }}</p>
             <p v-if="idCardError" class="text-red-500 text-sm mt-1 mb-1">{{ idCardError }}</p>
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">คำนำหน้าชื่อ *</label>
+            <label class="text-sm text-gray-600 mb-1 block">คำนำหน้าชื่อ</label>
             <select v-model="form.prefix" class="input-field">
               <option value="">เลือกคำนำหน้า</option>
               <option>นาย</option>
@@ -122,21 +121,21 @@
             </select>
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">ชื่อ - สกุล ผู้สมัคร *</label>
+            <label class="text-sm text-gray-600 mb-1 block">ชื่อ - สกุล ผู้สมัคร</label>
             <input v-model="form.fullName" type="text" placeholder="ชื่อ - นามสกุล" class="input-field" />
           </div>
           <div class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">ที่อยู่ *</label>
+            <label class="text-sm text-gray-600 mb-1 block">ที่อยู่</label>
             <textarea v-model="form.address" placeholder="บ้านเลขที่ หมู่ที่ ถนน ตำบล อำเภอ จังหวัด" rows="3"
               class="input-field resize-none" />
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">เบอร์โทรศัพท์ *</label>
+            <label class="text-sm text-gray-600 mb-1 block">เบอร์โทรศัพท์</label>
             <input v-model="form.phone" type="text" inputmode="numeric" placeholder="0XX-XXX-XXXX" maxlength="12"
               class="input-field" @keydown="blockNonDigit" @input="formatPhone" />
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">อีเมล *</label>
+            <label class="text-sm text-gray-600 mb-1 block">อีเมล</label>
             <input v-model="form.email" type="email" placeholder="example@email.com" class="input-field" />
           </div>
         </div>
@@ -150,11 +149,11 @@
         </h2>
         <div class="grid grid-cols-2 gap-4">
           <div class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">ชื่อสถานศึกษาเดิม *</label>
+            <label class="text-sm text-gray-600 mb-1 block">ชื่อสถานศึกษาเดิม</label>
             <input v-model="form.prevSchool" type="text" placeholder="ชื่อโรงเรียน / สถาบัน" class="input-field" />
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">วุฒิการศึกษา *</label>
+            <label class="text-sm text-gray-600 mb-1 block">วุฒิการศึกษา</label>
             <select v-model="form.prevLevel" class="input-field" @change="onPrevLevelChange">
               <option value="">เลือกวุฒิการศึกษา</option>
               <option value="m3">มัธยมศึกษาตอนต้น (ม.3)</option>
@@ -163,7 +162,7 @@
             </select>
           </div>
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">ปีที่จบการศึกษา *</label>
+            <label class="text-sm text-gray-600 mb-1 block">ปีที่จบการศึกษา</label>
             <input v-model="form.prevYear" type="text" inputmode="numeric" placeholder="พ.ศ. เช่น 2567" maxlength="4"
               class="input-field" @keydown="blockNonDigit" @input="validateYear" />
             <Transition name="fade">
@@ -174,7 +173,7 @@
           </div>
 
           <div v-if="form.prevLevel === 'pvc'" class="col-span-2">
-            <label class="text-sm text-gray-600 mb-1 block">สาขาวิชาที่จบปวช *</label>
+            <label class="text-sm text-gray-600 mb-1 block">สาขาวิชาที่จบปวช</label>
             <select v-model="form.prevBranch" class="input-field">
               <option value="">เลือกสาขาวิชาที่จบปวช</option>
               <option v-for="branch in pvcBranches" :key="branch.div_id" :value="branch.div_id">
@@ -187,7 +186,7 @@
           </div>
 
           <div>
-            <label class="text-sm text-gray-600 mb-1 block">เกรดเฉลี่ย (GPA) *</label>
+            <label class="text-sm text-gray-600 mb-1 block">เกรดเฉลี่ย (GPA)</label>
             <input v-model="form.gpa" type="text" inputmode="decimal" placeholder="เช่น 4.00" class="input-field"
               @input="validateGPA" maxlength="4" />
             <Transition name="fade">
@@ -208,7 +207,7 @@
             </p>
           </div>
           <div class="col-span-2 mt-2">
-            <p class="text-sm font-medium text-gray-700 mb-3">หลักฐานการศึกษา *</p>
+            <p class="text-sm font-medium text-gray-700 mb-3">หลักฐานการศึกษา</p>
             <div class="grid grid-cols-3 gap-3 mb-4">
               <div v-for="doc in docTypes" :key="doc.id"
                 @click="form.docType = doc.id; form.eduFront = null; form.eduFrontPreview = ''; form.eduBack = null; form.eduBackPreview = ''"
@@ -234,7 +233,7 @@
                 </div>
               </div>
               <div v-if="form.docType === 'certificate'">
-                <label class="text-sm text-gray-600 mb-1 block">ด้านหลัง *</label>
+                <label class="text-sm text-gray-600 mb-1 block">ด้านหลัง</label>
                 <div class="upload-box cursor-pointer"
                   :class="form.eduBack ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'"
                   @click="openUploadPicker('eduBack')">
@@ -668,16 +667,16 @@ const form = reactive({
 
 const idTypeLabel = computed(() => {
   const map: Record<string, string> = {
-    thai_id: 'เลขประจำตัวประชาชน', alien_id: 'เลขประจำตัวคนต่างด้าว',
-    passport: 'เลขหนังสือเดินทาง', g_code: 'G-Code', other: 'เลขเอกสารราชการ',
+    thai_id: 'เลขบัตรประจำตัวประชาชนไทย', alien_id: 'เลขบัตรประจำตัวคนต่างด้าว',
+    passport: 'เลขหนังสือเดินทาง', g_code: 'G-Code', other: 'หมายเลขเอกสารราชการ',
   }
   return map[form.idType] || 'หมายเลขประจำตัว'
 })
 
 const idTypePlaceholder = computed(() => {
   const map: Record<string, string> = {
-    thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'เช่น 6-1234-56789-12-3',
-    passport: 'ตัวเลข 7-9 ตัว', g_code: 'กรอก G-CODE 13 หลัก', other: 'หมายเลขเอกสาร',
+    thai_id: 'เลขประจำตัวประชาชน 13 หลัก', alien_id: 'กรอกเลขบัตรประจำตัวประชาชนคนต่างด้าว',
+    passport: 'กรอกเลขหนังสือเดินทาง', g_code: 'กรอก G-CODE', other: 'กรอกหมายเลขเอกสาร',
   }
   return map[form.idType] || ''
 })
