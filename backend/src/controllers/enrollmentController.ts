@@ -122,7 +122,8 @@ export const verifySlip = async (req: Request, res: Response) => {
     if (status === 'pending_payment') {
       const transition = await pool.query(`
         UPDATE applicants a
-        SET status = 'pending_document_review'
+        SET status = 'pending_document_review',
+            review_error_message = NULL
         WHERE a.app_id = $1 AND a.status = 'pending_payment'
           AND EXISTS (
             SELECT 1 FROM payments p
@@ -142,7 +143,7 @@ export const verifySlip = async (req: Request, res: Response) => {
     } else {
       await pool.query(`
         UPDATE applicants
-        SET status = 'pending_document_review'
+        SET status = 'pending_document_review', review_error_message = NULL
         WHERE app_id = $1
       `, [app_id])
     }
@@ -234,7 +235,9 @@ if (status === 'expired') {
 }
 
 await client.query(`
-  UPDATE applicants SET status = 'pending_document_review' WHERE app_id = $1
+  UPDATE applicants
+  SET status = 'pending_document_review', review_error_message = NULL
+  WHERE app_id = $1
 `, [app_id])
 
     const files = req.files as Record<string, Express.Multer.File[]>

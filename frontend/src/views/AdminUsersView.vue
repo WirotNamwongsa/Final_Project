@@ -157,6 +157,7 @@
               <option value="pending_payment">สมัครใหม่</option>
               <option value="expired">หมดเขตชำระเงิน</option>
               <option value="pending_document_review">รอตรวจสอบเอกสาร</option>
+              <option value="revision_required">ต้องแก้ไขเอกสาร</option>
               <option value="paid">พร้อมมอบตัว</option>
               <option value="enrolled">มอบตัวแล้ว</option>
             </select>
@@ -274,7 +275,8 @@
                   <span :class="[
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
                     row.สถานะ === 'enrolled' ? 'bg-green-50 text-green-700 border border-green-200' :
-                      row.สถานะ === 'expired' ? 'bg-red-50 text-red-700 border border-red-200' :
+                    row.สถานะ === 'expired' ? 'bg-red-50 text-red-700 border border-red-200' :
+                      row.สถานะ === 'revision_required' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
                       row.สถานะ === 'paid' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                         row.สถานะ === 'pending_document_review' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
                           'bg-gray-50 text-gray-500 border border-gray-200'
@@ -282,6 +284,7 @@
                     {{
                     row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
                         row.สถานะ === 'expired' ? 'หมดเขตชำระเงิน' :
+                        row.สถานะ === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
                         row.สถานะ === 'paid' ? 'พร้อมมอบตัว' :
                           row.สถานะ === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
@@ -410,7 +413,8 @@
           <div :class="[
             'px-6 py-5 flex-shrink-0',
             infoModal.status === 'enrolled' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-              infoModal.status === 'expired' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+            infoModal.status === 'expired' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
+              infoModal.status === 'revision_required' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
               infoModal.status === 'paid' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
                 infoModal.status === 'pending_document_review' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
                   'bg-gradient-to-r from-gray-500 to-gray-600'
@@ -432,6 +436,7 @@
                     {{
                       infoModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
                         infoModal.status === 'expired' ? 'หมดเขตชำระเงิน' :
+                        infoModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
                         infoModal.status === 'paid' ? 'พร้อมมอบตัว' :
                           infoModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
@@ -688,6 +693,7 @@
                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1',
                     docModal.status === 'enrolled' ? 'bg-emerald-500/30 text-emerald-200' :
                       docModal.status === 'paid' ? 'bg-blue-400/30 text-blue-200' :
+                        docModal.status === 'revision_required' ? 'bg-rose-400/30 text-rose-100' :
                         docModal.status === 'pending_document_review' ? 'bg-yellow-400/30 text-yellow-200' :
                           'bg-white/10 text-white/70'
                   ]">
@@ -695,6 +701,7 @@
                     {{
                       docModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
                         docModal.status === 'paid' ? 'พร้อมมอบตัว' :
+                          docModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
                           docModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
@@ -709,6 +716,12 @@
 
           <!-- Body -->
           <div class="overflow-y-auto flex-1 p-5 space-y-4 bg-gray-50">
+
+            <div v-if="docModal.reviewErrorMessage"
+              class="rounded-2xl border border-rose-200 bg-rose-50 p-4 text-rose-700">
+              <p class="text-sm font-bold">เหตุผลที่ส่งกลับให้แก้ไข</p>
+              <p class="mt-1 text-sm">{{ docModal.reviewErrorMessage }}</p>
+            </div>
 
             <!-- ═══ สถานะสลิป ═══ -->
             <div v-if="docModal.slipApproved === true"
@@ -1034,7 +1047,7 @@
               </div>
               <div>
                 <p class="font-bold text-white text-base">ปฏิเสธการมอบตัว</p>
-                <p class="text-red-100 text-xs mt-0.5">ผู้สมัครจะต้องอัปโหลดสลิปใหม่</p>
+                <p class="text-red-100 text-xs mt-0.5">ระบุสิ่งที่ผู้สมัครต้องแก้ไขหรือส่งใหม่</p>
               </div>
             </div>
           </div>
@@ -1046,7 +1059,7 @@
                 เหตุผลการปฏิเสธ
               </label>
               <textarea v-model="rejectReason" rows="3"
-                placeholder="ระบุเหตุผลการปฏิเสธการมอบตัว..."
+                placeholder="เช่น ภาพทะเบียนบ้านไม่ชัด กรุณาถ่ายและส่งใหม่..."
                 class="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none transition resize-none"
                 :class="rejectReason
                   ? 'border-red-400 focus:border-red-500 bg-red-50'
@@ -1345,18 +1358,17 @@ const rejectSlip = async () => {
     isLoading.value = true
 
     await api.post(`/admin/applicants/${docModal.value.appId}/reject-slip`, {
-      error_message: rejectReason.value || 'สลิปไม่ถูกต้อง',
+      error_message: rejectReason.value || 'กรุณาแก้ไขเอกสารตามที่เจ้าหน้าที่แจ้ง',
       verified_by: 'admin'
     })
 
     const index = applicants.value.findIndex(app => app.app_id === docModal.value.appId)
     if (index !== -1) {
-      applicants.value[index].status = 'paid'
+      applicants.value[index].status = 'revision_required'
     }
 
-    docModal.value.status = 'paid'
-    docModal.value.slipApproved = false
-    docModal.value.slipErrorMessage = rejectReason.value || 'สลิปไม่ถูกต้อง'
+    docModal.value.status = 'revision_required'
+    docModal.value.reviewErrorMessage = rejectReason.value || 'กรุณาแก้ไขเอกสารตามที่เจ้าหน้าที่แจ้ง'
 
     await fetchApplicants()
 
@@ -1364,9 +1376,9 @@ const rejectSlip = async () => {
     rejectReason.value = ''
 
     showSuccessDialog(
-      'สลิปถูกปฏิเสธแล้ว ผู้สมัครสามารถตรวจสอบเหตุผลและส่งใหม่ได้',
+      'ส่งใบสมัครกลับไปแก้ไขแล้ว โดยระบบจะแสดงเหตุผลให้ผู้สมัครทราบ',
       undefined,
-      'ปฏิเสธการมอบตัวสำเร็จแล้ว!'
+      'ส่งกลับให้แก้ไขสำเร็จแล้ว'
     )
 
   } catch (err) {
@@ -2122,7 +2134,7 @@ const filteredExportData = computed(() =>
 
     return matchName && matchBranch && matchCur && matchStatus && matchDate && matchEnrolledDate
   }).sort((a, b) => {
-    const statusOrder = { 'pending_document_review': 1, 'pending_payment': 2, 'paid': 3, 'enrolled': 4, 'expired': 5 }
+    const statusOrder = { 'pending_document_review': 1, 'revision_required': 2, 'pending_payment': 3, 'paid': 4, 'enrolled': 5, 'expired': 6 }
     const aStatus = statusOrder[a.สถานะ as keyof typeof statusOrder] || 999
     const bStatus = statusOrder[b.สถานะ as keyof typeof statusOrder] || 999
     return aStatus - bStatus
@@ -2155,6 +2167,7 @@ const getStatusLabel = (status: string): string => {
     'paid': 'พร้อมมอบตัว',
     'pending_payment': 'สมัครใหม่',
     'pending_document_review': 'รอตรวจสอบเอกสาร',
+    'revision_required': 'ต้องแก้ไขเอกสาร',
     'expired': 'หมดเขตชำระเงิน'
   }
   return labels[status] || status
@@ -2613,6 +2626,7 @@ const docModal = ref({
   status: '',
   slipApproved: null as boolean | null,
   slipErrorMessage: '' as string,
+  reviewErrorMessage: '' as string,
   documents: [] as { doc_type: string; file_url: string }[],
   activeTab: '' as string,
   imgError: false,
@@ -2648,6 +2662,13 @@ watch(
 const DOC_FILTER: Record<string, string[]> = {
   pending_payment: ['payment_slip'],
   pending_document_review: [
+    'payment_slip', 'id_front', 'id_back',
+    'edu_front', 'edu_back', 'letter_front', 'letter_back',
+    'self_house_front', 'self_house_back',
+    'father_house_front', 'father_house_back',
+    'mother_house_front', 'mother_house_back',
+  ],
+  revision_required: [
     'payment_slip', 'id_front', 'id_back',
     'edu_front', 'edu_back', 'letter_front', 'letter_back',
     'self_house_front', 'self_house_back',
@@ -2869,6 +2890,7 @@ const openDocModal = async (row: any) => {
     status: row.สถานะ || '',
     slipApproved: null,
     slipErrorMessage: '',
+    reviewErrorMessage: '',
     documents: [],
     activeTab: '',
     imgError: false,
@@ -2894,6 +2916,7 @@ const openDocModal = async (row: any) => {
         docModal.value.slipApproved = res.data.slip_approved
         docModal.value.slipErrorMessage = res.data.slip_error_message || ''
       }
+      docModal.value.reviewErrorMessage = res.data.review_error_message || res.data.applicant?.review_error_message || ''
 
       if (row._showAll) {
         docModal.value.activeTab = docModal.value.documents.find(

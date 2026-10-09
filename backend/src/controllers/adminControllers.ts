@@ -114,6 +114,7 @@ export const getApplicantDocuments = async (req: Request, res: Response) => {
     a.full_name,
     a.id_card_number,
     a.status,
+    a.review_error_message,
     p.slip_approved,
     p.slip_error_message
   FROM documents d
@@ -141,6 +142,7 @@ export const getApplicantDocuments = async (req: Request, res: Response) => {
       full_name:      firstRow.full_name,
       id_card_number: firstRow.id_card_number,
       status:         firstRow.status,
+      review_error_message: firstRow.review_error_message ?? '',
     };
     
     const documents = result.rows.map(row => ({
@@ -160,6 +162,7 @@ export const getApplicantDocuments = async (req: Request, res: Response) => {
         documents:          documents,
         slip_approved:      firstRow.slip_approved,
         slip_error_message: firstRow.slip_error_message ?? '',
+        review_error_message: firstRow.review_error_message ?? '',
       }
     });
     
@@ -223,7 +226,7 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
         a.app_id, a.prefix, a.full_name, a.id_card_number, a.id_type,
         a.phone, a.email, a.address,
         a.prev_school, a.prev_level, a.prev_year, a.gpa,
-        a.status, a.created_at,
+        a.status, a.review_error_message, a.created_at,
         c.cur_name, d.div_name,
         p.total_amount, p.required_amount, p.due_date,
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
@@ -247,7 +250,7 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
         a.app_id, a.prefix, a.full_name, a.id_card_number, a.id_type,
         a.phone, a.email, a.address,
         a.prev_school, a.prev_level, a.prev_year, a.gpa,
-        a.status, a.created_at,
+        a.status, a.review_error_message, a.created_at,
         c.cur_name, d.div_name,
         p.total_amount, p.required_amount, p.due_date,
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
@@ -387,6 +390,7 @@ export const approveSlip = async (req: Request, res: Response) => {
     const applicantUpdate = await client.query(
       `UPDATE applicants
        SET status = 'enrolled',
+           review_error_message = NULL,
            updated_at = NOW()
        WHERE app_id = $1 AND status = 'pending_document_review'
        RETURNING app_id`,
@@ -419,42 +423,41 @@ export const approveSlip = async (req: Request, res: Response) => {
 }
 
 // POST /api/admin/applicants/:app_id/reject-slip
-// ปฏิเสธสลิปการชำระเงิน
+// ส่งเอกสารมอบตัวกลับไปให้ผู้สมัครแก้ไข
 export const rejectSlip = async (req: Request, res: Response) => {
   const { app_id } = req.params
-  const { error_message, verified_by } = req.body
+  const { error_message } = req.body
 
   const client = await pool.connect()
   try {
     await client.query('BEGIN')
 
-    // อัปเดตสถานะสลิป
-    await client.query(
-      `UPDATE payments
-       SET slip_approved = false,
-           slip_error_message = $1,
-           verified_at = NOW(),
-           verified_by = $2
-       WHERE app_id = $3`,
-      [error_message || 'สลิปไม่ถูกต้อง', verified_by || 'admin', app_id]
+    const rejection = await client.query(
+      `UPDATE applicants
+       SET status = 'revision_required',
+           review_error_message = $1,
+           updated_at = NOW()
+       WHERE app_id = $2 AND status = 'pending_document_review'
+       RETURNING app_id`,
+      [error_message || 'กรุณาแก้ไขเอกสารตามที่เจ้าหน้าที่แจ้ง', app_id]
     )
 
-    // อัปเดตสถานะผู้สมัครกลับเป็น paid (ให้ upload สลิปใหม่)
-    await client.query(
-      `UPDATE applicants
-       SET status = 'paid',
-           updated_at = NOW()
-       WHERE app_id = $1`,
-      [app_id]
-    )
+    if (rejection.rowCount === 0) {
+      await client.query('ROLLBACK')
+      const existing = await pool.query('SELECT app_id FROM applicants WHERE app_id = $1', [app_id])
+      if (existing.rows.length === 0) {
+        return res.status(404).json({ success: false, message: 'ไม่พบข้อมูลผู้สมัคร' })
+      }
+      return res.status(409).json({ success: false, message: 'ปฏิเสธได้เฉพาะใบสมัครที่อยู่ระหว่างตรวจสอบเอกสาร' })
+    }
 
     await client.query('COMMIT')
 
-    res.json({ success: true, message: 'ปฏิเสธสลิปเรียบร้อยแล้ว' })
+    res.json({ success: true, message: 'ส่งใบสมัครกลับไปแก้ไขเรียบร้อยแล้ว' })
   } catch (error) {
     await client.query('ROLLBACK')
     console.error('rejectSlip error:', error)
-    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการปฏิเสธสลิป' })
+    res.status(500).json({ success: false, message: 'เกิดข้อผิดพลาดในการส่งเอกสารกลับไปแก้ไข' })
   } finally {
     client.release()
   }

@@ -107,6 +107,11 @@
           <p class="font-semibold">อยู่ระหว่างตรวจสอบเอกสาร</p>
           <p class="mt-1 text-sm">ส่งเอกสารมอบตัวแล้ว กรุณารอเจ้าหน้าที่ตรวจสอบ ไม่ต้องส่งเอกสารซ้ำ</p>
         </div>
+        <div v-else-if="isRevisionRequired" role="alert"
+          class="mb-5 rounded-xl border border-rose-300 bg-rose-50 p-4 text-rose-800">
+          <p class="font-semibold">เอกสารต้องแก้ไข</p>
+          <p class="mt-1 text-sm">{{ applicantInfo.review_error_message || 'กรุณาแก้ไขเอกสารตามที่เจ้าหน้าที่แจ้ง แล้วส่งใหม่อีกครั้ง' }}</p>
+        </div>
         <div v-else-if="isAlreadyEnrolled" role="status"
           class="mb-5 rounded-xl border border-green-300 bg-green-50 p-4 text-green-800">
           <p class="font-semibold">มอบตัวเรียบร้อยแล้ว</p>
@@ -209,7 +214,7 @@
         <div class="flex justify-center mt-6">
           <button v-if="!isPaymentExpired && !isDocumentReviewPending && !isAlreadyEnrolled" @click="handleSubmit"
             class="px-8 py-3 bg-emerald-500 text-white font-semibold rounded-lg hover:bg-emerald-600 transition-all duration-200 transform hover:scale-105">
-            ดำเนินการต่อ
+            {{ isRevisionRequired ? 'แก้ไขและส่งเอกสารใหม่' : 'ดำเนินการต่อ' }}
           </button>
           <button v-else disabled
             class="px-8 py-3 bg-gray-300 text-gray-600 font-semibold rounded-lg cursor-not-allowed">
@@ -246,6 +251,7 @@ const isPaymentExpired = computed(() => {
     && new Date(applicant.due_date).getTime() <= Date.now()
 })
 const isDocumentReviewPending = computed(() => applicantInfo.value?.status === 'pending_document_review')
+const isRevisionRequired = computed(() => applicantInfo.value?.status === 'revision_required')
 const isAlreadyEnrolled = computed(() => applicantInfo.value?.status === 'enrolled')
 
 const prevLevelLabel = (level: string) => {
@@ -419,6 +425,9 @@ const getStatusText = (status: string) => {
   const statusMap: Record<string, string> = {
     'pending_payment': '...',
     'paid': '...',
+    'pending_document_review': 'อยู่ระหว่างตรวจสอบเอกสาร',
+    'revision_required': 'ต้องแก้ไขเอกสาร',
+    'expired': 'หมดเขตชำระเงิน',
     'enrolled': '...'
   }
   return statusMap[status] || status

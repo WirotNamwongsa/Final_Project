@@ -276,7 +276,7 @@ export const checkStatus = async (req: Request, res: Response) => {
     const result = await pool.query(
       `
       SELECT
-        a.app_id, a.prefix, a.full_name, a.phone, a.status, a.created_at,
+        a.app_id, a.prefix, a.full_name, a.phone, a.status, a.review_error_message, a.created_at,
         a.prev_level, a.prev_year,
         c.cur_name, d.div_name,
         p.total_amount, p.required_amount, p.due_date,

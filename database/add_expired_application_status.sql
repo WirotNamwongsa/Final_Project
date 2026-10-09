@@ -4,7 +4,15 @@ DROP CONSTRAINT IF EXISTS applicants_status_check;
 
 ALTER TABLE public.applicants
 ADD CONSTRAINT applicants_status_check
-CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'expired'));
+CHECK (status IN (
+  'pending_payment',
+  'paid',
+  'enrolled',
+  'pending_document_review',
+  'revision_required',
+  'pending_approve',
+  'expired'
+));
 
 COMMENT ON COLUMN public.applicants.status IS
-  'Application status: pending_payment → paid → pending_document_review → enrolled; expired when payment deadline passes';
+  'Application status: pending_payment → paid → pending_document_review → enrolled; pending_document_review → revision_required → pending_document_review; expired when payment deadline passes';

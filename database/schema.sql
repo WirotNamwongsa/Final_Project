@@ -99,13 +99,14 @@ CREATE TABLE public.applicants (
     div_id         int4         NOT NULL,
     ap_id          int4         NOT NULL,
     status         varchar(30)  NOT NULL DEFAULT 'pending_payment',
+    review_error_message text    NULL,
     created_at     timestamptz  DEFAULT now() NULL,
     updated_at     timestamptz  DEFAULT now() NULL,
     id_type        varchar(20)  NOT NULL DEFAULT 'thai_id',
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
     CONSTRAINT applicants_id_card_number_key UNIQUE (id_card_number),
     CONSTRAINT applicants_id_type_check CHECK (id_type IN ('thai_id', 'alien_id', 'passport', 'g_code', 'other')),
-    CONSTRAINT applicants_status_check CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'expired')),
+    CONSTRAINT applicants_status_check CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'revision_required', 'pending_approve', 'expired')),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
     CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
@@ -210,5 +211,5 @@ CREATE TRIGGER set_updated_at
 
 -- ============================================================
 -- STATUS FLOW
--- pending_payment → paid → pending_document_review → enrolled; pending_payment → expired when due_date passes
+-- pending_payment → paid → pending_document_review → enrolled; pending_document_review → revision_required → pending_document_review; pending_payment → expired when due_date passes
 -- ============================================================
