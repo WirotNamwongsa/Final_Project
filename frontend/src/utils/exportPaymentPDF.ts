@@ -125,8 +125,7 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
   const rightRows: [string, string][] = [
     ['ธนาคาร', 'กรุงไทย สาขาเลย'],
     ['เลขบัญชี', '403-0-87831-8'],
-    ['ชื่อบัญชี', 'ร้านค้าสวัสดิการ'],
-    ['', 'วิทยาลัยเทคนิคเลย'],
+    ['ชื่อบัญชี', 'ร้านค้าสวัสดิการ วิทยาลัยเทคนิคเลย'],
     ['ยอดที่ต้องชำระ', `${data.totalPrice.toLocaleString()} บาท`],
   ]
   let rightValueX = col2X + 32
@@ -245,10 +244,20 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
   setDraw(0); lw(0.5)
   doc.rect(ML, y, CW, 12)
   sz(11); bold()
-  text('คำเตือน : ', ML + 3, y + 5)
+  const warningLabel = 'คำเตือน :'
+  const warningLabelX = ML + 3
+  text(warningLabel, warningLabelX, y + 7.5)
+  const warningText = 'การสมัครเรียนผ่านระบบออนไลน์ หากไม่ดำเนินการชำระเงินและยืนยันการมอบตัวผ่านระบบภายในกำหนด จะถูกตัดสิทธิ์อัตโนมัติ'
+  const warningTextX = warningLabelX + doc.getTextWidth(warningLabel) + 2
   normal()
-  text('การสมัครเรียนผ่านระบบออนไลน์ หากไม่ดำเนินการชำระเงินและยืนยันการมอบตัวผ่านระบบ', ML + 13, y + 5)
-  text('ภายในกำหนด จะถูกตัดสิทธิ์อัตโนมัติ', ML + 13, y + 10)
+  let warningFontSize = 11
+  sz(warningFontSize)
+  const warningMaxWidth = W - MR - 3 - warningTextX
+  while (doc.getTextWidth(warningText) > warningMaxWidth && warningFontSize > 8) {
+    warningFontSize -= 0.25
+    sz(warningFontSize)
+  }
+  text(warningText, warningTextX, y + 7.5)
   y += 16
 
   // ─── FOOTER ──────────────────────────────────────────────────
