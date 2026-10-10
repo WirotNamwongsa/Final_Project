@@ -113,7 +113,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { api } from '@/services/api'
 import { 
@@ -127,7 +127,6 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const router = useRouter()
-const route = useRoute()
 const authStore = useAuthStore()
 
 const loginForm = ref({
@@ -150,8 +149,7 @@ const handleLogin = async () => {
     if (response.success) {
       const userData = response.data
       authStore.login(userData)
-      const redirect = (route.query.redirect as string) || '/admin/users'
-      router.push(redirect)
+      router.push('/admin/dashboard')
     } else {
       errorMessage.value = response.message || 'เข้าสู่ระบบล้มเหลว'
     }
