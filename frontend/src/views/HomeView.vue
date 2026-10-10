@@ -394,13 +394,16 @@ const pvsStats = computed(() => {
       remaining: Number(d.quota || 0) - enrolled,
     }
   }).sort((a: any, b: any) => {
-    if (a.name !== b.name) return a.name.localeCompare(b.name, 'th')
-    const order: Record<string, number> = {
-      'ปวส. (ม.6/ต่างสาขา)': 1,
-      'ปวส. (สายตรง)': 2,
-      'ปวส. ทวิภาคี': 3,
+    const getCourseOrder = (label: string) => {
+      const normalized = String(label || '').replace(/\s/g, '')
+      if (normalized.includes('สายตรง')) return 1
+      if (normalized.includes('ม.6') || normalized.includes('ม6') || normalized.includes('ต่างสาขา')) return 2
+      if (normalized.includes('ทวิภาคี')) return 3
+      return 99
     }
-    return (order[a.curLabel] || 99) - (order[b.curLabel] || 99)
+    const courseOrder = getCourseOrder(a.curLabel) - getCourseOrder(b.curLabel)
+    if (courseOrder !== 0) return courseOrder
+    return a.name.localeCompare(b.name, 'th')
   })
 })
 
