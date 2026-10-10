@@ -307,13 +307,13 @@
                     </button>
                   </template>
                   <button v-else-if="row.สถานะ === 'pending_payment'"
-                    @click.stop="openInfoModal(row); setTimeout(() => openPaymentSlipOnly(), 500)"
+                    @click.stop="openInfoModal(row); runAfterModal(() => openPaymentSlipOnly())"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-semibold transition-colors">
                     <FileText class="w-3 h-3" />
                     ใบแจ้งชำระเงิน
                   </button>
                   <button v-else-if="row.สถานะ === 'enrolled'"
-                    @click.stop="openInfoModal(row); setTimeout(() => printEnrollmentCert(), 500)"
+                    @click.stop="openInfoModal(row); runAfterModal(() => printEnrollmentCert())"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors">
                     <FileText class="w-3 h-3" />
                     เอกสารมอบตัว
@@ -1195,6 +1195,8 @@ const openInfoModal = async (row: any) => {
   }
 }
 
+const runAfterModal = (callback: () => void) => window.setTimeout(callback, 500)
+
 const API_BASE = (import.meta.env.VITE_API_URL as string)?.replace(/\/api$/, '') || 'http://localhost:13001'
 const resolveUrl = (path: string | null | undefined) => {
   if (!path) return ''
@@ -2037,7 +2039,7 @@ const handleGeneratePDF = async (row: any) => {
   }
 }
 // ─── Computed ─────────────────────────────────────────────────
-const currentData = computed(() =>
+const currentData = computed<any[]>(() =>
   applicants.value.map(a => {
     const base = {
       ลำดับ: a.app_id,
@@ -2102,7 +2104,7 @@ const allBranches = computed(() => {
   return [...set].sort()
 })
 
-const filteredExportData = computed(() =>
+const filteredExportData = computed<any[]>(() =>
   currentData.value.filter(row => {
     const fullDisplay = row.คำนำหน้า + row.ชื่อ_นามสกุล
     const matchName = !exportSearch.value || fullDisplay.includes(exportSearch.value)
@@ -2142,7 +2144,7 @@ const filteredExportData = computed(() =>
 
 const totalPages = computed(() => Math.ceil(filteredExportData.value.length / pageSize.value))
 
-const paginatedData = computed(() => {
+const paginatedData = computed<any[]>(() => {
   const start = (currentPage.value - 1) * pageSize.value
   return filteredExportData.value.slice(start, start + pageSize.value)
 })
@@ -2217,8 +2219,8 @@ const normalizeDateForSearch = (dateStr: string) => {
   if (!dateStr) return dateStr
   const parts = dateStr.split('/')
   if (parts.length === 3) {
-    const day = parts[0].padStart(2, '0')
-    const month = parts[1].padStart(2, '0')
+    const day = (parts[0] || '').padStart(2, '0')
+    const month = (parts[1] || '').padStart(2, '0')
     const year = parts[2]
     return `${day}/${month}/${year}`
   }
@@ -2263,11 +2265,11 @@ function parseThaiIDText(text: string): Record<string, string> {
   if (dobMatch) result['OCR_วันเกิด'] = dobMatch[0].trim()
 
   const expMatch = text.match(/(?:หมดอายุ|Expiry Date?:?)\s*([\d\s\w\.]+)/i)
-  if (expMatch) result['OCR_วันหมดอายุ'] = expMatch[1].trim()
+  if (expMatch?.[1]) result['OCR_วันหมดอายุ'] = expMatch[1].trim()
 
 
   const religionMatch = text.match(/ศาสนา\s*([ก-ฮ\s]+?)(?:\n|เชื้อชาติ|สัญชาติ|$)/)
-  if (religionMatch) result['OCR_ศาสนา'] = religionMatch[1].trim()
+  if (religionMatch?.[1]) result['OCR_ศาสนา'] = religionMatch[1].trim()
 
   const addrKeywords = ['บ้านเลขที่', 'หมู่ที่', 'ถนน', 'ตำบล', 'แขวง', 'อำเภอ', 'เขต', 'จังหวัด']
   const addrLines = lines.filter(l => addrKeywords.some(kw => l.includes(kw)))
@@ -2381,8 +2383,9 @@ async function buildExportData(rows: any[], isExportAll = false): Promise<object
             mother_house_front: 'ทะเบียนบ้านมารดา (หน้า)',
           }
           for (const doc of docs) {
-            if (docMap[doc.doc_type] && doc.file_url) {
-              uploadedDocUrls[docMap[doc.doc_type]] = resolveUrl(doc.file_url)
+            const docLabel = docMap[doc.doc_type]
+            if (docLabel && doc.file_url) {
+              uploadedDocUrls[docLabel] = resolveUrl(doc.file_url)
             }
           }
 
@@ -2463,7 +2466,7 @@ function parseEduDocText(text: string): Record<string, string> {
 
   // GPA
   const gpaMatch = text.match(/(\d+\.\d+)/)
-  if (gpaMatch) result['OCR_GPA'] = gpaMatch[1]
+  if (gpaMatch?.[1]) result['OCR_GPA'] = gpaMatch[1]
 
   result['OCR_ข้อความดิบ'] = text.replace(/\n/g, ' ').trim()
   return result
@@ -2484,10 +2487,11 @@ function formatOCRDate(dateStr: string): string {
   const match = dateStr.match(/(\d{1,2})\s+([A-Za-zก-ฮ\.]+)\s+(\d{4})/)
   if (!match) return dateStr
 
-  const day = parseInt(match[1])
-  const monthKey = Object.keys(monthMap).find(k => match[2].startsWith(k))
+  const day = parseInt(match[1] || '', 10)
+  const monthText = match[2] || ''
+  const monthKey = Object.keys(monthMap).find(k => monthText.startsWith(k))
   const month = monthKey ? monthMap[monthKey] : null
-  let year = parseInt(match[3])
+  let year = parseInt(match[3] || '', 10)
 
   if (!month) return dateStr
   if (year < 2500) year += 543
@@ -2552,19 +2556,20 @@ const exportPDF = async () => {
     if (rows.length === 0) throw new Error('ไม่พบข้อมูลที่เลือก')
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
+      if (!row) continue
       ocrProgress.value.current = i + 1
       ocrProgress.value.name = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
 
       if (selectedExportType.value === 'students') {
         let ocrData = {}
         try {
-          if (row._idFrontUrl) ocrData = await runOCRFromUrl(row._idFrontUrl || '', 'id')
+          if (row._idFrontUrl) ocrData = await runOCRFromUrl(row._idFrontUrl, 'id')
         } catch (e) {
           console.warn('OCR failed for', row.ชื่อ_นามสกุล, e)
         }
         await generateStudentPDF({ ...row, ...ocrData })
       } else if (selectedExportType.value === 'payments') {
-        await generatePaymentPDF(row)
+        await generatePaymentReceiptPDF(row)
       }
     }
   } catch (err) {
@@ -2588,6 +2593,7 @@ const exportCombinedOrdersPDF = async () => {
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
+      if (!row) continue
       ocrProgress.value.current = i + 1
       ocrProgress.value.name = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
       await generateCombinedTwoPagePDF(row)
@@ -2608,7 +2614,7 @@ async function loadThaiFont(): Promise<string> {
     const blob = await response.blob()
     return new Promise((resolve) => {
       const reader = new FileReader()
-      reader.onloadend = () => resolve((reader.result as string).split(',')[1])
+      reader.onloadend = () => resolve(String(reader.result || '').split(',')[1] || '')
       reader.readAsDataURL(blob)
     })
   } catch (error) {
@@ -3002,7 +3008,8 @@ async function generateStudentPDF(studentData: any) {
       const clean = value.replace(/-/g, '')
       for (let i = 0; i < count; i++) {
         doc.rect(startX + i * w, y - 4, w, 5)
-        if (clean[i]) { f('bold', 12); doc.text(clean[i], startX + i * w + 1.2, y - 0.3); f('normal', 14) }
+        const character = clean[i]
+        if (character) { f('bold', 12); doc.text(character, startX + i * w + 1.2, y - 0.3); f('normal', 14) }
       }
     }
     y = 16
@@ -3414,7 +3421,7 @@ const exportOrdersListPDF = async () => {
 
   // ─── ช่วงวันที่ (หาจากข้อมูลที่เลือก) ──────────────────
   const validDates = rows
-    .map(r => r.วันที่ชำระ)
+    .map(r => r['วันที่ชำระ'])
     .filter(d => d && d !== '-' && d !== 'ยังไม่ชำระ')
 
   const dateRangeText = validDates.length > 0
@@ -3467,7 +3474,7 @@ const exportOrdersListPDF = async () => {
       y = 15
     }
 
-    const amt = Number(row.ยอดชำระ) || 0
+    const amt = Number(row['ยอดชำระ']) || 0
     totalAmount += amt
 
     cx = L
@@ -3494,7 +3501,7 @@ const exportOrdersListPDF = async () => {
     doc.text(branchText[0], cx + colW.branch / 2, y, { align: 'center' })
     cx += colW.branch
 
-    doc.text(row.วันที่ชำระ || '-', cx + colW.date / 2, y, { align: 'center' })
+    doc.text(row['วันที่ชำระ'] || '-', cx + colW.date / 2, y, { align: 'center' })
     cx += colW.date
 
     doc.setTextColor(0, 0, 0)
