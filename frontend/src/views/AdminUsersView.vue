@@ -307,13 +307,13 @@
                     </button>
                   </template>
                   <button v-else-if="row.สถานะ === 'pending_payment'"
-                    @click.stop="openInfoModal(row); runAfterModal(() => openPaymentSlipOnly())"
+                    @click.stop="openPaymentSlipForRow(row)"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-orange-500 hover:bg-orange-600 text-white rounded-lg text-xs font-semibold transition-colors">
                     <FileText class="w-3 h-3" />
                     ใบแจ้งชำระเงิน
                   </button>
                   <button v-else-if="row.สถานะ === 'enrolled'"
-                    @click.stop="openInfoModal(row); runAfterModal(() => printEnrollmentCert())"
+                    @click.stop="printEnrollmentCertForRow(row)"
                     class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-green-500 hover:bg-green-600 text-white rounded-lg text-xs font-semibold transition-colors">
                     <FileText class="w-3 h-3" />
                     เอกสารมอบตัว
@@ -1195,7 +1195,28 @@ const openInfoModal = async (row: any) => {
   }
 }
 
-const runAfterModal = (callback: () => void) => window.setTimeout(callback, 500)
+const fetchApplicantDocumentData = async (row: any) => {
+  try {
+    const response = await api.get(`/admin/applicants/detail/${encodeURIComponent(row.เลขบัตรประชาชน)}`)
+    const applicant = response.data?.data
+    if (!applicant) throw new Error('ไม่พบข้อมูลผู้สมัคร')
+    return applicant
+  } catch (error) {
+    console.error('โหลดข้อมูลสำหรับเอกสารไม่สำเร็จ', error)
+    showErrorDialog('โหลดข้อมูลผู้สมัครไม่สำเร็จ กรุณาลองใหม่')
+    return null
+  }
+}
+
+const openPaymentSlipForRow = async (row: any) => {
+  const applicant = await fetchApplicantDocumentData(row)
+  if (applicant) await openPaymentSlipOnly(applicant)
+}
+
+const printEnrollmentCertForRow = async (row: any) => {
+  const applicant = await fetchApplicantDocumentData(row)
+  if (applicant) await printEnrollmentCert(applicant)
+}
 
 const API_BASE = (import.meta.env.VITE_API_URL as string)?.replace(/\/api$/, '') || 'http://localhost:13001'
 const resolveUrl = (path: string | null | undefined) => {
@@ -2694,9 +2715,9 @@ const DOC_FILTER: Record<string, string[]> = {
   ],
 }
 
-const openPaymentSlipOnly = async () => {
+const openPaymentSlipOnly = async (applicantData = infoModal.value.data) => {
   infoModal.value.open = false
-  const d = infoModal.value.data
+  const d = applicantData
   if (!d) return
 
   let expenses: any[] = []
@@ -2786,8 +2807,8 @@ async function loadFont(): Promise<string> {
   return btoa(binary)
 }
 
-const printEnrollmentCert = async () => {
-  const d = docModal.value.enrolledData || infoModal.value.data || {}
+const printEnrollmentCert = async (applicantData = docModal.value.enrolledData || infoModal.value.data) => {
+  const d = applicantData || {}
 
   const fontBase64 = await loadFont()
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
@@ -2835,7 +2856,7 @@ const printEnrollmentCert = async () => {
   y += 10
 
   doc.setFontSize(18)
-  doc.text(`${d.prefix}${d.full_name}`, pageW / 2, y, { align: 'center' })
+  doc.text(`${d.prefix} ${d.full_name}`, pageW / 2, y, { align: 'center' })
   y += 8
 
   doc.setFontSize(12)
