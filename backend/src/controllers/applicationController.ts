@@ -245,6 +245,20 @@ export const createApplication = async (req: Request, res: Response) => {
     if (err.code === '23505' && err.constraint === 'applicants_active_id_card_number_key') {
       return sendError(res, "เลขเอกสารนี้มีใบสมัครที่ยังดำเนินการอยู่แล้ว", 400);
     }
+    if (err.code === '23505' && err.constraint === 'applicants_id_card_number_key') {
+      const previousApplication = await pool.query(
+        'SELECT status FROM applicants WHERE id_card_number = $1 ORDER BY created_at DESC LIMIT 1',
+        [req.body.id_card_number],
+      );
+      if (previousApplication.rows[0]?.status === 'expired') {
+        return sendError(
+          res,
+          'ฐานข้อมูลยังไม่รองรับการสมัครใหม่หลังหมดเขต กรุณาให้ผู้ดูแลรัน database/allow_reapply_after_expired.sql ก่อน',
+          503,
+        );
+      }
+      return sendError(res, 'เลขเอกสารนี้มีใบสมัครอยู่แล้ว', 400);
+    }
     console.error('❌ createApplication error:', err.message)
     console.error('❌ detail:', err.detail)
     console.error('❌ hint:', err.hint)
