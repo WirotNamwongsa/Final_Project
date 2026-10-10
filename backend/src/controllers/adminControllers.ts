@@ -31,6 +31,11 @@ export const getApplicants = async (_req: Request, res: Response) => {
         p.slip_name,
         p.slip_path,
         e.enrolled_at,   
+        (
+          SELECT COUNT(*)
+          FROM applicant_expenses ae
+          WHERE ae.app_id = a.app_id AND ae.is_required = false
+        ) AS optional_order_count,
         -- เพิ่ม 2 บรรทัดนี้
         MAX(CASE WHEN doc.doc_type = 'id_front' THEN doc.file_path END) AS id_front_path,
         MAX(CASE WHEN doc.doc_type = 'id_back'  THEN doc.file_path END) AS id_back_path,
@@ -86,6 +91,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
         slip_name:    row.slip_name,
        slip_url:     toUrl(row.slip_path),
       },
+      optional_order_count: Number(row.optional_order_count || 0),
     }))
 
     res.json({ success: true, data: applicants })

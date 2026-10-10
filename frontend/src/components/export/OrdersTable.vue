@@ -34,6 +34,7 @@
           </td>
           <td class="px-4 py-3 text-center">
             <div class="flex items-center justify-center gap-1.5 flex-wrap">
+              <span class="text-xs text-gray-500">สั่ง {{ row.จำนวนรายการสั่งซื้อ }} รายการ</span>
               <button @click="$emit('view-documents', row)"
                 class="inline-flex items-center gap-1 px-2.5 py-1.5 bg-slate-50 hover:bg-slate-100 text-slate-600 rounded-lg text-xs font-semibold transition">
                 <FileText class="w-3.5 h-3.5" /> หลักฐาน
@@ -80,7 +81,7 @@
             class="px-4 py-2 text-sm text-gray-500 hover:bg-gray-200 rounded-xl font-semibold transition">
             ปิด
           </button>
-          <button @click="() => window.open(slipModal.slipUrl, '_blank')"
+          <button @click="openSlipInNewTab"
             class="flex items-center gap-2 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition">
             <ExternalLink class="w-4 h-4" /> เปิดในแท็บใหม่
           </button>
@@ -124,6 +125,10 @@ const openSlipModal = (row: any) => {
     name: `${row.คำนำหน้า}${row.ชื่อ_นามสกุล}`,
     slipUrl: row._slipUrl,
   }
+}
+
+const openSlipInNewTab = () => {
+  if (slipModal.value.slipUrl) window.open(slipModal.value.slipUrl, '_blank', 'noopener,noreferrer')
 }
 
 const generatePDF = (row: any) => {

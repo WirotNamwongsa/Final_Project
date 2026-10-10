@@ -2107,7 +2107,9 @@ const currentData = computed<any[]>(() =>
     return {
       ...base,
        เลขบัตรประชาชน: a.id_card_number,
+      สถานะ: a.status,
       enrolled_at: a.enrolled_at ?? null,
+      จำนวนรายการสั่งซื้อ: Number(a.optional_order_count || 0),
       ยอดชำระ: a.payment?.total_amount ?? '-',
       หลักฐานการชำระ_ใบเสร็จ: a.payment?.slip_name ?? '-',
       วันที่ชำระ: a.payment?.paid_at
@@ -2136,7 +2138,9 @@ const filteredExportData = computed<any[]>(() =>
       : selectedExportType.value === 'payments'
         ? (row.สถานะ === 'paid' || row.สถานะ === 'enrolled')
         : selectedExportType.value === 'orders'
-        ? (selectedStatus.value ? row.สถานะ === selectedStatus.value : (row.สถานะ === 'paid' || row.สถานะ === 'enrolled'))
+        ? Number(row.จำนวนรายการสั่งซื้อ) > 0 && (selectedStatus.value
+          ? row.สถานะ === selectedStatus.value
+          : row.สถานะ === 'paid' || row.สถานะ === 'enrolled')
         : (!selectedStatus.value || (row.สถานะ && row.สถานะ === selectedStatus.value))
 
     let matchDate = true
@@ -3602,7 +3606,7 @@ async function generateCombinedTwoPagePDF(row: any) {
   let orderItems: any[] = []
   let dbData: any = {}
   try {
-    const dbRes = await api.get(`/enrollments/orders/${row.เลขบัตรประชาชน}`)
+    const dbRes = await api.get(`/enrollments/orders/${row.เลขบัตรประชาชน}?orderOnly=true`)
     orderItems = dbRes.data?.data ?? []
   } catch (e) {
     console.warn('โหลด orders ไม่ได้')
@@ -3949,7 +3953,7 @@ async function generateOrderPageOnlyPDF(row: any) {
   // ดึงข้อมูล order
   let orderItems: any[] = []
   try {
-     const dbRes = await api.get(`/enrollments/orders/${row.เลขบัตรประชาชน}`)
+     const dbRes = await api.get(`/enrollments/orders/${row.เลขบัตรประชาชน}?orderOnly=true`)
      console.log('orders response:', dbRes.data)
 orderItems = dbRes.data?.data ?? []
      console.log('orderItems:', orderItems)

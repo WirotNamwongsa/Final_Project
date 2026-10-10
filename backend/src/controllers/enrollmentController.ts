@@ -439,6 +439,7 @@ export const getEnrollmentSummary = async (_req: Request, res: Response) => {
 export const getOrdersByIdCard = async (req: Request, res: Response) => {
   try {
     const { idCard } = req.params
+    const orderOnly = req.query.orderOnly === 'true'
 
     const result = await pool.query(`
       SELECT 
@@ -457,8 +458,9 @@ export const getOrdersByIdCard = async (req: Request, res: Response) => {
         ORDER BY (status = 'expired') ASC, created_at DESC
         LIMIT 1
       )
+      AND ($2::boolean = false OR ae.is_required = false)
       ORDER BY ae.ae_id
-    `, [idCard])
+    `, [idCard, orderOnly])
 
     sendSuccess(res, result.rows)
   } catch (err: any) {
