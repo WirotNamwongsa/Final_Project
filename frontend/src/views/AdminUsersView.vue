@@ -985,8 +985,10 @@
           <!-- Body -->
           <div class="p-6 space-y-4">
             <div class="bg-red-50 border border-red-200 rounded-xl p-4">
-              <p class="text-sm text-red-700 font-semibold">{{ deleteDialog.name }}</p>
-              <p class="text-xs text-red-500 mt-1">ข้อมูลทั้งหมดรวมถึงเอกสารและไฟล์ที่อัพโหลดจะถูกลบถาวร</p>
+              <p class="text-sm text-red-700 font-semibold">
+                ข้อมูลทั้งหมดรวมถึงเอกสารและไฟล์ที่อัพโหลดของ<br>
+                {{ deleteDialog.fullName }} จะถูกลบถาวร
+              </p>
             </div>
 
             <div>
@@ -1135,6 +1137,7 @@ const deleteDialog = ref({
   open: false,
   appId: '',
   name: '',
+  fullName: '',
   confirmText: '',
   loading: false,
 })
@@ -2718,10 +2721,18 @@ const openPaymentSlipOnly = async () => {
 }
 
 const openDeleteDialog = () => {
+  const prefix = String(infoModal.value.data?.prefix || '')
+  const applicantName = String(infoModal.value.data?.full_name || infoModal.value.name)
+  const confirmationName = prefix && applicantName.startsWith(prefix)
+    ? applicantName.slice(prefix.length).trim()
+    : applicantName.trim()
+  const displayName = prefix ? `${prefix} ${confirmationName}` : infoModal.value.name.trim()
+
   deleteDialog.value = {
     open: true,
     appId: infoModal.value.appId,
-    name: infoModal.value.name,
+    name: confirmationName,
+    fullName: displayName,
     confirmText: '',
     loading: false,
   }
