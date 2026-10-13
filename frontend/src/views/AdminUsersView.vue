@@ -41,7 +41,7 @@
     <div class="p-4 space-y-4">
 
       <!-- Export Controls Card -->
-      <div class="bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3">
+      <div class="relative z-10 bg-white rounded-2xl border border-gray-100 shadow-sm p-4 space-y-3 overflow-visible">
 
         <!-- Row 1:  Export -->
         <div class="flex items-center justify-between flex-wrap gap-3">
@@ -134,32 +134,46 @@
             <select v-model="selectedCurFilter"
               class="pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white appearance-none cursor-pointer min-w-[120px] text-gray-700">
               <option value="">ทุกหลักสูตร</option>
-              <option value="ปวช">ปวช</option>
-              <option value="ปวส">ปวส</option>
+              <option v-for="curriculum in allCurriculums" :key="curriculum.id" :value="curriculum.id">
+                {{ curriculum.label }}
+              </option>
             </select>
             <ChevronDown
               class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
           </div>
-          <div class="relative">
-            <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-            <select v-model="selectedBranch"
-              class="pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white appearance-none cursor-pointer min-w-[160px] text-gray-700">
-              <option value="">ทุกสาขาวิชา</option>
-              <option v-for="b in allBranches" :key="b" :value="b">{{ b }}</option>
-            </select>
+          <div ref="branchDropdownRef" class="relative min-w-[220px]">
+            <Filter class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none z-10" />
+            <button type="button" @click.stop="branchDropdownOpen = !branchDropdownOpen"
+              class="w-full pl-9 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white cursor-pointer text-left text-gray-700">
+              <span class="block truncate">{{ selectedBranch ? selectedBranchLabel : 'ทุกสาขาวิชา' }}</span>
+            </button>
             <ChevronDown
               class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
+            <ul v-if="branchDropdownOpen"
+              class="absolute left-0 top-full mt-1 z-40 min-w-full w-max max-w-[min(28rem,calc(100vw-2rem))] max-h-64 overflow-y-auto bg-white border border-gray-200 rounded-xl shadow-lg py-1">
+              <li>
+                <button type="button" @click="selectBranch('')"
+                  class="w-full text-left px-3 py-2 text-sm hover:bg-gray-50"
+                  :class="!selectedBranch ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-gray-700'">
+                  ทุกสาขาวิชา
+                </button>
+              </li>
+              <li v-for="branch in allBranches" :key="branch.id">
+                <button type="button" @click="selectBranch(branch.id)"
+                  class="w-full text-left px-3 py-2 text-sm whitespace-nowrap hover:bg-gray-50"
+                  :class="selectedBranch === branch.id ? 'bg-blue-600 text-white hover:bg-blue-600' : 'text-gray-700'">
+                  {{ branch.label }}
+                </button>
+              </li>
+            </ul>
           </div>
           <div v-if="!selectedExportType || selectedExportType === 'students'" class="relative">
             <select v-model="selectedStatus"
               class="pl-4 pr-8 py-2.5 border border-gray-200 rounded-xl text-sm focus:border-green-400 focus:outline-none bg-white appearance-none cursor-pointer min-w-[140px] text-gray-700">
               <option value="">ทุกสถานะ</option>
-              <option value="pending_payment">สมัครใหม่</option>
-              <option value="expired">หมดเขตชำระเงิน</option>
-              <option value="pending_document_review">รอตรวจสอบเอกสาร</option>
-              <option value="revision_required">ต้องแก้ไขเอกสาร</option>
-              <option value="paid">พร้อมมอบตัว</option>
-              <option value="enrolled">มอบตัวแล้ว</option>
+              <option v-for="status in allStatuses" :key="status" :value="status">
+                {{ getStatusLabel(status) }}
+              </option>
             </select>
             <ChevronDown
               class="absolute right-2.5 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400 pointer-events-none" />
@@ -192,14 +206,14 @@
         <span class="text-xs text-gray-400">กรองโดย:</span>
         <span v-if="selectedCurFilter"
           class="inline-flex items-center gap-1.5 px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full border border-blue-200">
-          {{ selectedCurFilter }}
+          {{ selectedCurriculumLabel }}
           <button @click="selectedCurFilter = ''" class="hover:text-blue-900">
             <X class="w-3 h-3" />
           </button>
         </span>
         <span v-if="selectedBranch"
           class="inline-flex items-center gap-1.5 px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full border border-green-200">
-          สาขา: {{ selectedBranch }}
+          สาขา: {{ selectedBranchLabel }}
           <button @click="selectedBranch = ''" class="hover:text-green-900">
             <X class="w-3 h-3" />
           </button>
@@ -1090,7 +1104,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, h } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, h } from 'vue'
 import { apiService } from '@/utils/api'
 
 import {
@@ -1235,11 +1249,15 @@ const exportItems = [
 
 // ─── State ───────────────────────────────────────────────────
 const applicants = ref<any[]>([])
+const curriculumOptions = ref<any[]>([])
+const divisionOptions = ref<any[]>([])
 const isLoading = ref(false)
 const error = ref('')
 const selectedExportType = ref('')
 const exportSearch = ref('')
 const selectedBranch = ref('')
+const branchDropdownOpen = ref(false)
+const branchDropdownRef = ref<HTMLElement | null>(null)
 const selectedCurFilter = ref('')
 const selectedStatus = ref('')
 const selectedIds = ref<string[]>([])
@@ -1912,7 +1930,40 @@ const fetchApplicants = async () => {
   }
 }
 
-onMounted(() => fetchApplicants())
+const fetchFilterOptions = async () => {
+  try {
+    const [curriculumResponse, divisionResponse] = await Promise.all([
+      apiService.getCurriculums(),
+      apiService.getDivisions(),
+    ])
+    curriculumOptions.value = curriculumResponse.data ?? []
+    divisionOptions.value = divisionResponse.data ?? []
+  } catch (e) {
+    console.error('โหลดตัวเลือกหลักสูตร/สาขาวิชาไม่สำเร็จ', e)
+  }
+}
+
+const selectBranch = (branchId: string) => {
+  selectedBranch.value = branchId
+  branchDropdownOpen.value = false
+}
+
+const closeBranchDropdownOnOutside = (event: MouseEvent) => {
+  const target = event.target as Node
+  if (branchDropdownRef.value && !branchDropdownRef.value.contains(target)) {
+    branchDropdownOpen.value = false
+  }
+}
+
+onMounted(() => {
+  fetchApplicants()
+  fetchFilterOptions()
+  document.addEventListener('click', closeBranchDropdownOnOutside)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('click', closeBranchDropdownOnOutside)
+})
 
 
 // ✅ ฟังก์ชันใหม่สำหรับปุ่ม payments
@@ -2067,7 +2118,9 @@ const currentData = computed<any[]>(() =>
       คำนำหน้า: a.prefix,
       ชื่อ_นามสกุล: a.full_name,
       หลักสูตร: a.curriculum.cur_shortname,
+      หลักสูตรId: String(a.curriculum.cur_id),
       สาขาวิชา: a.division.div_name,
+      สาขาวิชาId: String(a.division.div_id),
     }
 
     if (selectedExportType.value === '' || selectedExportType.value === 'students') {
@@ -2122,17 +2175,66 @@ const currentData = computed<any[]>(() =>
   })
 )
 
-const allBranches = computed(() => {
-  const set = new Set(currentData.value.map(r => r.สาขาวิชา))
-  return [...set].sort()
+const allCurriculums = computed(() => curriculumOptions.value
+  .map(curriculum => ({
+    id: String(curriculum.cur_id),
+    label: String(curriculum.cur_shortname || curriculum.cur_name || '').trim(),
+  }))
+  .filter(option => option.id && option.label)
+  .sort((a, b) => a.label.localeCompare(b.label, 'th')))
+
+const allBranches = computed(() => divisionOptions.value
+  .filter(division => !selectedCurFilter.value || String(division.cur_id) === selectedCurFilter.value)
+  .map(division => {
+    const branchName = String(division.div_name || '').trim()
+    const curriculumName = String(
+      division.curriculum?.cur_shortname || division.curriculum?.cur_name || '',
+    ).trim()
+    return {
+      id: String(division.div_id),
+      label: curriculumName ? `${branchName} (${curriculumName})` : branchName,
+    }
+  })
+  .filter(option => option.id && option.label)
+  .sort((a, b) => a.label.localeCompare(b.label, 'th')))
+
+const selectedCurriculumLabel = computed(() =>
+  allCurriculums.value.find(option => option.id === selectedCurFilter.value)?.label || selectedCurFilter.value,
+)
+
+const selectedBranchLabel = computed(() =>
+  allBranches.value.find(option => option.id === selectedBranch.value)?.label || selectedBranch.value,
+)
+
+watch([selectedCurFilter, allBranches], () => {
+  if (selectedBranch.value && !allBranches.value.some(option => option.id === selectedBranch.value)) {
+    selectedBranch.value = ''
+  }
+  branchDropdownOpen.value = false
+})
+
+const allStatuses = computed(() => {
+  const statusOrder: Record<string, number> = {
+    pending_payment: 1,
+    expired: 2,
+    pending_document_review: 3,
+    revision_required: 4,
+    paid: 5,
+    enrolled: 6,
+  }
+  return [...new Set(
+    currentData.value
+      .map(row => String(row.สถานะ || '').trim())
+      .filter(Boolean),
+  )].sort((a, b) => (statusOrder[a] ?? 99) - (statusOrder[b] ?? 99) || a.localeCompare(b))
 })
 
 const filteredExportData = computed<any[]>(() =>
   currentData.value.filter(row => {
     const fullDisplay = row.คำนำหน้า + row.ชื่อ_นามสกุล
     const matchName = !exportSearch.value || fullDisplay.includes(exportSearch.value)
-    const matchBranch = !selectedBranch.value || row.สาขาวิชา === selectedBranch.value
-    const matchCur = !selectedCurFilter.value || row.หลักสูตร.includes(selectedCurFilter.value)
+    const matchBranch = !selectedBranch.value || row.สาขาวิชาId === selectedBranch.value
+    const matchCur = !selectedCurFilter.value || row.หลักสูตรId === selectedCurFilter.value
     const matchStatus = selectedExportType.value === 'students'
       ? (!selectedStatus.value || row.สถานะ === selectedStatus.value)
       : selectedExportType.value === 'payments'
