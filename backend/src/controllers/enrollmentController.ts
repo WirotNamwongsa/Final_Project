@@ -8,7 +8,7 @@ import { getPublicUrl, supabase, STORAGE_BUCKET } from '../config/supabase'
 
 // ========================================================
 // POST /enrollments/verify-slip
-// ตรวจสอบสลิปกับ Slipok แล้วอัปเดต status → paid
+// ตรวจสอบสลิปกับ Slipok แล้วอัปเดต status → enrolled
 // ========================================================
 export const verifySlip = async (req: Request, res: Response) => {
   try {
@@ -230,7 +230,7 @@ export const confirmEnrollment = async (req: Request, res: Response) => {
 
     const { app_id, status } = applicant.rows[0]
 
-    // ✅ ต้องเป็น paid หรือ pending_document_review หรือ enrolled เท่านั้น
+    // ✅ ต้องเป็น pending_document_review หรือ enrolled เท่านั้น
 if (status === 'pending_payment') {
   return sendError(res, 'กรุณารอ admin ยืนยันการชำระเงินก่อน', 400)
 }
@@ -481,7 +481,7 @@ export const approvePayment = async (req: Request, res: Response) => {
     UPDATE applicants
     SET status = $1
     WHERE app_id = $2 AND status = 'pending_approve'
-  `, [approve ? 'paid' : 'pending_payment', app_id])
+  `, [approve ? 'enrolled' : 'pending_payment', app_id])
 
   sendSuccess(res, {}, approve ? 'อนุมัติแล้ว' : 'ส่งกลับให้นักเรียนอัปสลิปใหม่')
 }

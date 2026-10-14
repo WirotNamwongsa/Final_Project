@@ -291,7 +291,6 @@
                     row.สถานะ === 'enrolled' ? 'bg-green-50 text-green-700 border border-green-200' :
                     row.สถานะ === 'expired' ? 'bg-red-50 text-red-700 border border-red-200' :
                       row.สถานะ === 'revision_required' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                      row.สถานะ === 'paid' ? 'bg-blue-50 text-blue-700 border border-blue-200' :
                         row.สถานะ === 'pending_document_review' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
                           'bg-gray-50 text-gray-500 border border-gray-200'
                   ]">
@@ -299,7 +298,6 @@
                     row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
                         row.สถานะ === 'expired' ? 'หมดเขตชำระเงิน' :
                         row.สถานะ === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
-                        row.สถานะ === 'paid' ? 'พร้อมมอบตัว' :
                           row.สถานะ === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
@@ -429,7 +427,6 @@
             infoModal.status === 'enrolled' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
             infoModal.status === 'expired' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
               infoModal.status === 'revision_required' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
-              infoModal.status === 'paid' ? 'bg-gradient-to-r from-blue-500 to-blue-600' :
                 infoModal.status === 'pending_document_review' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
                   'bg-gradient-to-r from-gray-500 to-gray-600'
           ]">
@@ -451,7 +448,6 @@
                       infoModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
                         infoModal.status === 'expired' ? 'หมดเขตชำระเงิน' :
                         infoModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
-                        infoModal.status === 'paid' ? 'พร้อมมอบตัว' :
                           infoModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
                   </span>
@@ -664,11 +660,6 @@
                 <Eye class="w-4 h-4" /> รายละเอียดการสมัคร
               </button>
 
-              <button v-else-if="infoModal.status === 'paid'" @click="openDocModalFromInfo"
-                class="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-blue-200">
-                <Eye class="w-4 h-4" /> รายละเอียดการสมัคร
-              </button>
-
               <template v-else-if="infoModal.status === 'enrolled'">
                 <button @click="printEnrollmentCert"
                   class="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition shadow-sm shadow-emerald-200">
@@ -702,15 +693,13 @@
                   <span :class="[
                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1',
                     docModal.status === 'enrolled' ? 'bg-emerald-500/30 text-emerald-200' :
-                      docModal.status === 'paid' ? 'bg-blue-400/30 text-blue-200' :
-                        docModal.status === 'revision_required' ? 'bg-rose-400/30 text-rose-100' :
+                      docModal.status === 'revision_required' ? 'bg-rose-400/30 text-rose-100' :
                         docModal.status === 'pending_document_review' ? 'bg-yellow-400/30 text-yellow-200' :
                           'bg-white/10 text-white/70'
                   ]">
                     <span class="w-1.5 h-1.5 rounded-full bg-current inline-block"></span>
                     {{
                       docModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
-                        docModal.status === 'paid' ? 'พร้อมมอบตัว' :
                           docModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
                           docModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
                     }}
@@ -2214,19 +2203,7 @@ watch([selectedCurFilter, allBranches], () => {
 })
 
 const allStatuses = computed(() => {
-  const statusOrder: Record<string, number> = {
-    pending_payment: 1,
-    expired: 2,
-    pending_document_review: 3,
-    revision_required: 4,
-    paid: 5,
-    enrolled: 6,
-  }
-  return [...new Set(
-    currentData.value
-      .map(row => String(row.สถานะ || '').trim())
-      .filter(Boolean),
-  )].sort((a, b) => (statusOrder[a] ?? 99) - (statusOrder[b] ?? 99) || a.localeCompare(b))
+  return ['pending_payment', 'expired', 'pending_document_review', 'revision_required', 'enrolled']
 })
 
 const filteredExportData = computed<any[]>(() =>
@@ -2238,11 +2215,11 @@ const filteredExportData = computed<any[]>(() =>
     const matchStatus = selectedExportType.value === 'students'
       ? (!selectedStatus.value || row.สถานะ === selectedStatus.value)
       : selectedExportType.value === 'payments'
-        ? (row.สถานะ === 'paid' || row.สถานะ === 'enrolled')
+        ? row.สถานะ === 'enrolled'
         : selectedExportType.value === 'orders'
         ? Number(row.จำนวนรายการสั่งซื้อ) > 0 && (selectedStatus.value
           ? row.สถานะ === selectedStatus.value
-          : row.สถานะ === 'paid' || row.สถานะ === 'enrolled')
+          : row.สถานะ === 'enrolled')
         : (!selectedStatus.value || (row.สถานะ && row.สถานะ === selectedStatus.value))
 
     let matchDate = true

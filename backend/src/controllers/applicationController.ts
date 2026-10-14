@@ -375,7 +375,6 @@ export const getStats = async (_req: Request, res: Response) => {
   SELECT
     COUNT(*) AS total_applicants,
     COUNT(*) FILTER (WHERE status != 'enrolled') AS applicant_count,
-    COUNT(*) FILTER (WHERE status = 'paid') AS paid,
     COUNT(*) FILTER (WHERE status = 'enrolled') AS enrolled,
     COUNT(*) FILTER (WHERE status IN ('pending_document_review', 'pending_approve')) AS pending_approve,
     COUNT(*) FILTER (WHERE status = 'pending_payment') AS pending_payment
