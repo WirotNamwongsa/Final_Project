@@ -321,9 +321,14 @@ const inputMode = computed(() => {
 })
 
 const resetValidation = () => {
-  idCard.value = ''
   errorMessage.value = ''
   isValidIdCard.value = false
+  // Don't clear idCard.value when changing ID type
+  // Re-validate the existing idCard value with the new type
+  if (idCard.value) {
+    const event = { target: { value: idCard.value } } as Event
+    validateIdCard(event)
+  }
 }
 
 const validateIdCard = (event: Event) => {
