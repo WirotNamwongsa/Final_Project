@@ -400,7 +400,7 @@
                 <p class="font-medium">{{ form.prefix }} {{ form.fullName }}</p>
               </div>
               <div>
-                <p class="text-xs text-gray-400">เลขบัตรประชาชน</p>
+                <p class="text-xs text-gray-400">{{ idTypeLabel }}</p>
                 <p class="font-medium">{{ form.idCard }}</p>
               </div>
               <div>
