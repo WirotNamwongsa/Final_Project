@@ -2213,7 +2213,7 @@ const filteredExportData = computed<any[]>(() =>
     const matchBranch = !selectedBranch.value || row.สาขาวิชาId === selectedBranch.value
     const matchCur = !selectedCurFilter.value || row.หลักสูตรId === selectedCurFilter.value
     const matchStatus = selectedExportType.value === 'students'
-      ? (!selectedStatus.value || row.สถานะ === selectedStatus.value)
+      ? row.สถานะ === 'enrolled'
       : selectedExportType.value === 'payments'
         ? row.สถานะ === 'enrolled'
         : selectedExportType.value === 'orders'
