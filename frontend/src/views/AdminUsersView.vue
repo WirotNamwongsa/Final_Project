@@ -3876,10 +3876,20 @@ async function generateCombinedTwoPagePDF(row: any) {
   doc.addPage()
   y = 2
 
-  // ดึง dbData สำหรับหน้า 2
+  // ดึง dbData สำหรับหน้า 2 (รวมข้อมูลการชำระเงินและสลิป)
   try {
     const dbRes = await api.get(`/admin/applicants/detail/${row.เลขบัตรประชาชน}`)
     dbData = dbRes.data?.data || {}
+    // เพิ่มข้อมูลการชำระเงินจาก dbData ลงใน row หากไม่มี
+    if (!row.ยอดชำระ && dbData.total_amount) {
+      row.ยอดชำระ = dbData.total_amount
+    }
+    if (!row.วันที่ชำระ && dbData.paid_at) {
+      row.วันที่ชำระ = new Date(dbData.paid_at).toLocaleDateString('th-TH')
+    }
+    if (!row._slipUrl && dbData.payment_slip_url) {
+      row._slipUrl = dbData.payment_slip_url
+    }
   } catch { /* ผ่าน */ }
 
   // โลโก้
