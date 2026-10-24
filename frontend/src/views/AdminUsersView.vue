@@ -71,7 +71,7 @@
                      hover:shadow-lg hover:shadow-green-300 hover:-translate-y-0.5
                      disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0">
               <Download class="w-4 h-4 group-hover:animate-bounce" />
-              Export ที่เลือก
+              Export Excel
             </button>
 
             <button v-if="selectedExportType === 'students'" @click="exportAll()" :disabled="ocrProgress.running" class="group flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200
