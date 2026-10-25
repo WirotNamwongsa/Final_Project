@@ -704,6 +704,7 @@ const editExpense = (expense: ExpenseDetail) => {
     cur_id: curId,
     exp_cost: expense.exp_cost,
     payment_type: expense.payment_type || '',
+    item_category: expense.item_category || '',
     exp_sizes: expense.exp_sizes ? [...expense.exp_sizes] : []
   }
 
