@@ -220,8 +220,8 @@
                         required></textarea>
                     </div>
 
-                    <!-- หลักสูตร + ประเภทชำระ -->
-                    <div class="grid grid-cols-2 gap-3">
+                    <!-- หลักสูตร + ประเภทชำระ + ประเภทรายการ -->
+                    <div class="grid grid-cols-3 gap-3">
                       <div>
                         <label class="block text-gray-700 text-sm font-bold mb-2">หลักสูตร</label>
                         <select v-model="formData.cur_id"
@@ -241,6 +241,18 @@
                           <option value="">เลือกประเภท</option>
                           <option value="mandatory">บังคับชำระ</option>
                           <option value="optional">ไม่บังคับชำระ</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label class="block text-gray-700 text-sm font-bold mb-2">ประเภทรายการ</label>
+                        <select v-model="formData.item_category"
+                          class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-colors"
+                          required>
+                          <option value="">เลือกประเภท</option>
+                          <option value="general">ทั่วไป</option>
+                          <option value="uniform">เครื่องแบบ</option>
+                          <option value="equipment">อุปกรณ์</option>
+                          <option value="custom">อื่นๆ</option>
                         </select>
                       </div>
                     </div>

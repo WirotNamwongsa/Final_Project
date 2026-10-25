@@ -445,6 +445,7 @@ export const getOrdersByIdCard = async (req: Request, res: Response) => {
       SELECT 
         ae.ae_id,
         ed.exp_name   AS item_name,
+        ed.item_category AS item_type,
         ae.size,
         ae.quantity,
         ae.unit_price,
