@@ -2106,6 +2106,7 @@ const currentData = computed<any[]>(() =>
       ลำดับ: a.app_id,
       คำนำหน้า: a.prefix,
       ชื่อ_นามสกุล: a.full_name,
+      ประเภทเอกสาร: a.id_type,
       หลักสูตร: a.curriculum.cur_shortname,
       หลักสูตรId: String(a.curriculum.cur_id),
       สาขาวิชา: a.division.div_name,
@@ -3132,7 +3133,10 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   const f = (style: 'normal' | 'bold', size: number) => { doc.setFont('THSarabun', style); doc.setFontSize(size) }
   const put = (text: string | number | undefined, x: number, y: number) => {
     if (!text && text !== 0) return
-    f('bold', 14); doc.text(String(text), x, y); f('normal', 14)
+    f('bold', 14); doc.text(String(text), x, y - 1.2); f('normal', 14)
+  }
+  const lineAfterText = (text: string, x: number, y: number, endX: number) => {
+    doc.line(x + doc.getTextWidth(text) + 1, y, endX, y)
   }
   const box = (x: number, y: number, checked = false) => {
     doc.rect(x, y - 3.2, 3.5, 3.5)
@@ -3144,6 +3148,18 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
       doc.rect(startX + i * w, y - 4, w, 5)
       const character = clean[i]
       if (character) { f('bold', 12); doc.text(character, startX + i * w + 1.2, y - 0.3); f('normal', 14) }
+    }
+  }
+  const identityBoxes = (startX: number, y: number, value: string, count: number, size: number) => {
+    for (let i = 0; i < count; i++) {
+      const x = startX + i * size
+      doc.rect(x, y - size, size, size)
+      const character = value[i]
+      if (character) {
+        f('bold', size < 4 ? 9 : 12)
+        doc.text(character, x + size / 2, y - (size < 4 ? 0.6 : 1.1), { align: 'center' })
+        f('normal', 14)
+      }
     }
   }
   y = 16
@@ -3162,10 +3178,10 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   y += 7
   f('bold', 16)
   doc.text('ใบมอบตัวและข้อมูลประวัติขึ้นทะเบียนนักเรียน นักศึกษา', pageW / 2, y, { align: 'center' })
-  doc.rect(R - 26, 24, 26, 34)
+  doc.rect(R - 22, 20, 26, 34)
   f('normal', 12)
-  doc.text('ติดรูป', R - 13, 38, { align: 'center' })
-  doc.text('1 นิ้ว', R - 13, 44, { align: 'center' })
+  doc.text('ติดรูป', R - 9, 34, { align: 'center' })
+  doc.text('1 นิ้ว', R - 9, 40, { align: 'center' })
   y += 7
   f('bold', 14)
   doc.text('ข้อมูลส่วนตัวของนักเรียน นักศึกษา', L, y)
@@ -3176,21 +3192,43 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   doc.text('เพศ', L + 92, y); doc.line(L + 99, y, L + 112, y); put(studentData.เพศ, L + 100, y)
   doc.text('ชื่อเล่น', L + 114, y); doc.line(L + 125, y, R - 28, y); put(studentData.ชื่อเล่น, L + 126, y)
   y += 7
-  doc.text('เลขบัตรประชาชน', L, y)
-  const idRaw = (studentData.เลขบัตรประชาชน || '').replace(/-/g, '')
-  const idGroups = [1, 4, 5, 2, 1]
-  let ix = L + 32; let ic = 0
-  idGroups.forEach((g, gi) => {
-    for (let i = 0; i < g; i++) {
-      doc.rect(ix, y - 4, 4.8, 5)
-      f('bold', 12); doc.text(idRaw[ic] || '', ix + 1.2, y - 0.3); f('normal', 14)
-      ix += 4.8; ic++
+  const idType = studentData.ประเภทเอกสาร || 'thai_id'
+  const idRaw = String(studentData.เลขบัตรประชาชน || '')
+  const idLabel = idTypeLabel(idType)
+  f('normal', 14)
+  doc.text(idLabel, L, y)
+  const idBoxesStartX = L + doc.getTextWidth(idLabel) + 2
+  let birthDateStartX = L + 109
+  if (idType === 'thai_id') {
+    const digits = idRaw.replace(/-/g, '')
+    const idGroups = [1, 4, 5, 2, 1]
+    let ix = idBoxesStartX; let ic = 0
+    idGroups.forEach((g, gi) => {
+      for (let i = 0; i < g; i++) {
+        doc.rect(ix, y - 4.5, 4.5, 4.5)
+        const character = digits[ic]
+        if (character) {
+          f('bold', 11); doc.text(character, ix + 2.25, y - 1.1, { align: 'center' }); f('normal', 14)
+        }
+        ix += 4.5; ic++
+      }
+      if (gi < idGroups.length - 1) { doc.text('-', ix + 0.2, y - 0.5); ix += 1.5 }
+    })
+    birthDateStartX = ix + 2
+  } else {
+    const layoutByType: Record<string, { count: number; size: number }> = {
+      alien_id: { count: 13, size: 4.5 },
+      passport: { count: 9, size: 5 },
+      g_code: { count: 13, size: 4.5 },
+      other: { count: 20, size: 3 },
     }
-    if (gi < idGroups.length - 1) { doc.text('-', ix + 0.5, y - 0.5); ix += 3 }
-  })
-  doc.text('เกิดวันที่', ix + 3, y); doc.line(ix + 16, y, ix + 24, y)
-  doc.text('เดือน', ix + 25, y); doc.line(ix + 34, y, ix + 52, y)
-  doc.text('พ.ศ.', ix + 53, y); doc.line(ix + 61, y, ix + 72, y)
+    const layout = layoutByType[idType] || { count: 13, size: 5 }
+    identityBoxes(idBoxesStartX, y, idRaw, layout.count, layout.size)
+    birthDateStartX = idBoxesStartX + layout.count * layout.size + 2
+  }
+  doc.text('เกิดวันที่', birthDateStartX, y); doc.line(birthDateStartX + 13, y, birthDateStartX + 19, y)
+  doc.text('เดือน', birthDateStartX + 20, y); doc.line(birthDateStartX + 27, y, birthDateStartX + 37, y)
+  doc.text('พ.ศ.', birthDateStartX + 38, y); doc.line(birthDateStartX + 46, y, birthDateStartX + 57, y)
   y += 7
   doc.text('เชื้อชาติ', L, y); doc.line(L + 14, y, L + 30, y); put(studentData.เชื้อชาติ, L + 15, y)
   doc.text('สัญชาติ', L + 32, y); doc.line(L + 43, y, L + 57, y); put(studentData.สัญชาติ, L + 44, y)
@@ -3204,16 +3242,23 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   doc.text('จังหวัดที่เกิด', L, y); doc.line(L + 21, y, L + 60, y); put(studentData.จังหวัดที่เกิด, L + 22, y)
   doc.text('จำนวนพี่น้องทั้งหมด', L + 62, y); doc.line(L + 91, y, L + 98, y)
   doc.text('คน', L + 99, y)
-  doc.text('จำนวนพี่น้องที่กำลังศึกษาอยู่', L + 104, y); doc.line(L + 140, y, L + 147, y)
-  doc.text('คน', L + 148, y)
+  const studyingSiblingsLabel = 'จำนวนพี่น้องที่กำลังศึกษาอยู่'
+  doc.text(studyingSiblingsLabel, L + 104, y)
+  const studyingSiblingsLineStart = L + 104 + doc.getTextWidth(studyingSiblingsLabel) + 1
+  doc.line(studyingSiblingsLineStart, y, studyingSiblingsLineStart + 7, y)
+  doc.text('คน', studyingSiblingsLineStart + 8, y)
   y += 7
   doc.text('ความพิการ', L, y)
-  box(L + 19, y, !studentData.ความพิการ); doc.text('ไม่พิการ', L + 24, y)
-  doc.text('ความสามารถพิเศษ', L + 45, y); doc.line(L + 75, y, R - 28, y)
+  const disabilityValue = String(studentData.ความพิการ || '').trim()
+  const hasDisability = Boolean(disabilityValue) && !['ไม่มี', 'ไม่พิการ', 'ไม่มีความพิการ', '-'].includes(disabilityValue)
+  box(L + 19, y, hasDisability); doc.text('พิการ', L + 24, y)
+  box(L + 38, y, !hasDisability); doc.text('ไม่พิการ', L + 43, y)
+  doc.text('ความสามารถพิเศษ', L + 59, y); doc.line(L + 89, y, R - 28, y)
   y += 8
   f('bold', 14)
-  doc.text('ข้อมูลที่อยู่  เลขรหัสประจำบ้าน (จำเป็นต้องกรอกให้ครบ)', L, y)
-  charBoxes(L + 102, y, studentData.รหัสประจำบ้าน || '', 11, 4.8)
+  const addressHeading = 'ข้อมูลที่อยู่  เลขรหัสประจำบ้าน'
+  doc.text(addressHeading, L, y)
+  charBoxes(L + doc.getTextWidth(addressHeading) + 2, y, studentData.รหัสประจำบ้าน || '', 11, 4.8)
   y += 7
   f('normal', 14)
   doc.text('บ้านเลขที่', L, y); doc.line(L + 16, y, L + 32, y); put(studentData.บ้านเลขที่, L + 17, y)
@@ -3224,54 +3269,57 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   y += 7
   doc.text('จังหวัด', L, y); doc.line(L + 13, y, L + 48, y); put(studentData.จังหวัด, L + 14, y)
   doc.text('รหัสไปรษณีย์', L + 50, y); doc.line(L + 70, y, L + 90, y); put(studentData.รหัสไปรษณีย์, L + 71, y)
-  doc.text('เบอร์โทรศัพท์ที่ติดต่อได้', L + 92, y); doc.line(L + 120, y, R - 28, y); put(studentData.เบอร์โทร, L + 121, y)
+  doc.text('เบอร์โทรศัพท์ที่ติดต่อได้', L + 92, y); doc.line(L + 122, y, R - 28, y); put(studentData.เบอร์โทร, L + 125, y)
   y += 8
   f('bold', 14)
   doc.text('ข้อมูลครอบครัว', L, y)
   y += 7
   f('normal', 14)
   doc.text('ชื่อ-สกุล บิดา', L, y); doc.line(L + 24, y, L + 88, y); put(studentData.ชื่อบิดา, L + 25, y)
-  doc.text('สถานภาพ', L + 90, y)
-  box(L + 104, y); doc.text('มีชีวิต', L + 109, y)
-  box(L + 122, y); doc.text('เสียชีวิต', L + 127, y)
-  doc.text('ความพิการ', L + 140, y)
-  box(L + 155, y); doc.text('พิการ', L + 160, y)
-  box(L + 170, y); doc.text('ไม่พิการ', L + 175, y)
+  doc.text('สถานภาพ', L + 92, y)
+  box(L + 108, y); doc.text('มีชีวิต', L + 113, y)
+  box(L + 124, y); doc.text('เสียชีวิต', L + 129, y)
+  doc.text('ความพิการ', L + 142, y)
+  box(L + 157, y); doc.text('พิการ', L + 162, y)
+  box(L + 172, y); doc.text('ไม่พิการ', L + 177, y)
   y += 6.5
   doc.text('อาชีพบิดา', L, y); doc.line(L + 16, y, L + 60, y)
   doc.text('รายได้ต่อเดือน', L + 62, y); doc.line(L + 83, y, L + 108, y)
-  doc.text('บาท', L + 110, y)
-  doc.text('เบอร์โทรศัพท์ บิดา', L + 116, y); doc.line(L + 143, y, R, y)
+  doc.text('บาท  ', L + 110, y)
+  doc.text('เบอร์โทรศัพท์บิดา', L + 116, y); doc.line(L + 143, y, R, y)
   y += 6.5
   doc.text('ชื่อ-สกุล มารดา', L, y); doc.line(L + 26, y, L + 88, y); put(studentData.ชื่อมารดา, L + 27, y)
-  doc.text('สถานภาพ', L + 90, y)
-  box(L + 104, y); doc.text('มีชีวิต', L + 109, y)
-  box(L + 122, y); doc.text('เสียชีวิต', L + 127, y)
-  doc.text('ความพิการ', L + 140, y)
-  box(L + 155, y); doc.text('พิการ', L + 160, y)
-  box(L + 170, y); doc.text('ไม่พิการ', L + 175, y)
+  doc.text('สถานภาพ', L + 92, y)
+  box(L + 108, y); doc.text('มีชีวิต', L + 113, y)
+  box(L + 124, y); doc.text('เสียชีวิต', L + 129, y)
+  doc.text('ความพิการ', L + 142, y)
+  box(L + 157, y); doc.text('พิการ', L + 162, y)
+  box(L + 172, y); doc.text('ไม่พิการ', L + 177, y)
   y += 6.5
   doc.text('อาชีพมารดา', L, y); doc.line(L + 18, y, L + 60, y)
   doc.text('รายได้ต่อเดือน', L + 62, y); doc.line(L + 83, y, L + 108, y)
-  doc.text('บาท', L + 110, y)
-  doc.text('เบอร์โทรศัพท์ มารดา', L + 116, y); doc.line(L + 145, y, R, y)
+  doc.text('บาท ', L + 110, y)
+  doc.text('เบอร์โทรศัพท มารดา', L + 116, y); doc.line(L + 145, y, R, y)
   y += 7
-  doc.text('สถานภาพการสมรส บิดา/มารดา', L, y)
-  box(L + 56, y); doc.text('อยู่ด้วยกัน', L + 61, y)
-  box(L + 80, y); doc.text('แยกกันอยู่', L + 85, y)
-  box(L + 103, y); doc.text('หย่าร้าง', L + 108, y)
-  box(L + 123, y); doc.text('บิดา/มารดาแต่งงานใหม่', L + 128, y)
-  box(L + 163, y); doc.text('บิดา/มารดาเสียชีวิต', L + 168, y)
+  const maritalStatusLabel = 'สถานภาพการสมรส บิดา/มารดา'
+  doc.text(maritalStatusLabel, L, y)
+  let maritalOptionX = L + doc.getTextWidth(maritalStatusLabel) + 4
+  const maritalStatusOptions = ['อยู่ด้วยกัน', 'แยกกันอยู่', 'หย่าร้าง', 'บิดา/มารดาแต่งงานใหม่', 'บิดา/มารดาเสียชีวิต']
+  maritalStatusOptions.forEach(option => {
+    box(maritalOptionX, y)
+    doc.text(option, maritalOptionX + 5, y)
+    maritalOptionX += 7 + doc.getTextWidth(option)
+  })
   y += 8
   doc.text('ข้าพเจ้า (ชื่อผู้ปกครอง)', L, y)
-  doc.line(L + 42, y, L + 120, y); put(studentData.ชื่อผู้ปกครอง, L + 43, y)
+  lineAfterText('ข้าพเจ้า (ชื่อผู้ปกครอง)', L, y, L + 120); put(studentData.ชื่อผู้ปกครอง, L + 43, y)
   doc.text('เกี่ยวข้องเป็น(กับนักเรียน)', L + 122, y); doc.line(L + 156, y, R, y)
   y += 6.5
-  doc.text('เบอร์โทรศัพท์ที่ติดต่อผู้ปกครอง', L, y); doc.line(L + 60, y, L + 115, y)
+  doc.text('เบอร์โทรศัพท์ที่ติดต่อผู้ปกครอง', L, y); lineAfterText('เบอร์โทรศัพท์ที่ติดต่อผู้ปกครอง', L, y, L + 115)
   doc.text('ขอทำใบมอบตัวต่อผู้อำนวยการวิทยาลัยเทคนิคเลย ดังนี้', L + 117, y)
   y += 6.5
   doc.text('นักศึกษาในความปกครองของข้าพเจ้าชื่อ', L, y)
-  doc.line(L + 70, y, L + 130, y)
+  lineAfterText('นักศึกษาในความปกครองของข้าพเจ้าชื่อ', L, y, L + 130)
   doc.text('ชื่อเล่น', L + 132, y); doc.line(L + 143, y, R, y)
   y += 6
   f('normal', 13)
@@ -3279,18 +3327,19 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
   y += 5.5
   doc.text('เรียบร้อยตามคำสั่งสอน ข้อบังคับ และระเบียบวินัยของวิทยาลัยฯ ทุกประการ โดยข้าพเจ้าขอรับผิดชอบค่าเล่าเรียน เครื่องแต่งกาย และอุปกรณ์', L, y)
   y += 5.5
-  doc.text('การเรียนให้เพียงพอ ข้าพเจ้า ขอมอบ (ชื่อนักเรียน นักศึกษา)', L, y); doc.line(L + 108, y, R, y)
+  const studentCustodyText = 'การเรียนให้เพียงพอ ข้าพเจ้า ขอมอบ (ชื่อนักเรียน นักศึกษา)'
+  doc.text(studentCustodyText, L, y); lineAfterText(studentCustodyText, L, y, R)
   y += 5.5
   doc.text('ให้เป็นนักเรียน นักศึกษา วิทยาลัยเทคนิคเลย ตั้งแต่บัดนี้เป็นต้นไป', L, y)
   y += 16
   f('normal', 14)
   doc.text('ลงชื่อ', L + 8, y); doc.line(L + 18, y, L + 78, y)
   doc.text('ผู้ปกครอง', L + 80, y)
-  doc.text('ลงชื่อ', pageW / 2 + 10, y); doc.line(pageW / 2 + 20, y, pageW / 2 + 80, y)
-  doc.text('นักเรียน/นักศึกษา', pageW / 2 + 82, y)
+  doc.text('ลงชื่อ', pageW / 2 + 10, y); doc.line(pageW / 2 + 20, y, pageW / 2 + 68, y)
+  doc.text('นักเรียน/นักศึกษา', pageW / 2 + 70, y)
   y += 7
   doc.text('(', L + 18, y); doc.line(L + 22, y, L + 75, y); doc.text(')', L + 76, y)
-  doc.text('(', pageW / 2 + 20, y); doc.line(pageW / 2 + 24, y, pageW / 2 + 78, y); doc.text(')', pageW / 2 + 79, y)
+  doc.text('(', pageW / 2 + 20, y); doc.line(pageW / 2 + 24, y, pageW / 2 + 67, y); doc.text(')', pageW / 2 + 68, y)
 }
 
 
