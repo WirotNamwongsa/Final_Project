@@ -301,7 +301,7 @@ const maxLength = computed(() => {
   const map: Record<string, number> = {
     thai_id: 13,
     alien_id: 13,
-    passport: 20,
+    passport: 9,
     g_code: 15,
     other: 30,
   }
@@ -343,6 +343,11 @@ const validateIdCard = (event: Event) => {
     }
   } else if (selectedIdType.value === 'passport') {
     value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    // Extract letters (max 2) and numbers (max 7)
+    const letters = value.replace(/[^A-Z]/g, '').slice(0, 2)
+    const numbers = value.replace(/[^0-9]/g, '').slice(0, 7)
+    // Combine: letters first, then numbers (max 9 total)
+    value = letters + numbers
     input.value = value
   }
 
@@ -359,18 +364,18 @@ const validateIdCard = (event: Event) => {
       case 'thai_id':
         minLength = 13
         if (value.length < 13) {
-          errorMsg = 'กรุณากรอกเลขบัตรประชาชนให้ครบ 13 หลัก'
+          errorMsg = 'กรุณากรอกเลขบัตรประชาชนให้ครบ'
         }
         break
       case 'alien_id':
         minLength = 13
         if (value.length < 13) {
-          errorMsg = 'กรุณากรอกเลขบัตรประจำตัวคนต่างด้าวให้ครบ 13 หลัก'
+          errorMsg = 'กรุณากรอกเลขบัตรประจำตัวคนต่างด้าวให้ครบ'
         }
         break
       case 'passport':
-        minLength = 6
-        if (value.length < 6) {
+        minLength = 9
+        if (value.length < 9) {
           errorMsg = 'กรุณากรอกเลขหนังสือเดินทางให้ครบ'
         }
         break
