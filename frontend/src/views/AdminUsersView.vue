@@ -1060,7 +1060,6 @@
                 เหตุผลการปฏิเสธ
               </label>
               <textarea v-model="rejectReason" rows="3"
-                placeholder="เช่น ภาพทะเบียนบ้านไม่ชัด กรุณาถ่ายและส่งใหม่..."
                 class="w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none transition resize-none"
                 :class="rejectReason
                   ? 'border-red-400 focus:border-red-500 bg-red-50'
@@ -2072,12 +2071,28 @@ const exportPaymentsPDF = async () => {
   }
 
   try {
+    const fontBase64 = await loadThaiFont()
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    if (fontBase64) {
+      doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
+      doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
+      doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
+    }
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       ocrProgress.value.current = i + 1
       ocrProgress.value.name = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
-      await generatePaymentReceiptPDF(row)
+      
+      // Add new page for each person (except first)
+      if (i > 0) {
+        doc.addPage()
+      }
+      
+      await addPaymentReceiptPage(doc, row)
     }
+
+    doc.save('ใบแสดงการชำระเงิน_รวม.pdf')
 
   } catch (err) {
     console.error('❌ Error exporting payments PDF:', err)
@@ -2690,14 +2705,29 @@ const exportPDF = async () => {
 
       doc.save(`ใบมอบตัว_รวม_${rows.length}_คน.pdf`)
     } else if (selectedExportType.value === 'payments') {
-      // Payments still export individually for now
+      // Create single PDF with multiple pages for payments
+      const fontBase64 = await loadThaiFont()
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+      if (fontBase64) {
+        doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
+        doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
+        doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
+      }
+
       for (let i = 0; i < rows.length; i++) {
         const row = rows[i]
         if (!row) continue
         ocrProgress.value.current = i + 1
         ocrProgress.value.name = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
-        await generatePaymentReceiptPDF(row)
+
+        // Add new page for each person (except first)
+        if (i > 0) {
+          doc.addPage()
+        }
+        await addPaymentReceiptPage(doc, row)
       }
+
+      doc.save('ใบแสดงการชำระเงิน_รวม.pdf')
     }
   } catch (err) {
     console.error('❌ Error exporting PDF:', err)
@@ -3344,15 +3374,7 @@ async function addStudentPageToPDF(doc: any, studentData: any) {
 
 
 
-async function generatePaymentReceiptPDF(row: any) {
-  const fontBase64 = await loadThaiFont()
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  if (fontBase64) {
-    doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
-    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
-    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
-  }
-
+async function addPaymentReceiptPage(doc: any, row: any) {
   const pageW = 210
   const margin = 15
   let y = 2
@@ -3541,8 +3563,6 @@ async function generatePaymentReceiptPDF(row: any) {
   doc.setFont('THSarabun', 'normal')
   doc.setTextColor(150, 150, 150)
   doc.text(`พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, pageW / 2, y, { align: 'center' })
-
-  doc.save(`ใบแสดงการชำระเงิน-${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}.pdf`)
 }
 const exportOrdersListPDF = async () => {
   // กรองเฉพาะที่เลือก ถ้าไม่ได้เลือกเลยให้แจ้ง
