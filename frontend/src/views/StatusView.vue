@@ -349,6 +349,10 @@ const validateIdCard = (event: Event) => {
     // Combine: letters first, then numbers (max 9 total)
     value = letters + numbers
     input.value = value
+  } else if (selectedIdType.value === 'g_code') {
+    // G-Code: only letters and numbers, no Thai characters
+    value = value.replace(/[^A-Za-z0-9]/g, '').toUpperCase()
+    input.value = value
   }
 
   idCard.value = value
