@@ -2748,13 +2748,28 @@ const exportCombinedOrdersPDF = async () => {
     const rows = currentData.value.filter(r => selectedIds.value.includes(r.ลำดับ))
     if (rows.length === 0) throw new Error('ไม่พบข้อมูลที่เลือก')
 
+    const fontBase64 = await loadThaiFont()
+    const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+    if (fontBase64) {
+      doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
+      doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
+      doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
+    }
+
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i]
       if (!row) continue
       ocrProgress.value.current = i + 1
       ocrProgress.value.name = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
-      await generateCombinedTwoPagePDF(row)
+      
+      // Add 2 pages for each person (except first)
+      if (i > 0) {
+        doc.addPage()
+      }
+      await addCombinedOrderPages(doc, row)
     }
+
+    doc.save('ใบรายการ_รวม.pdf')
   } catch (err) {
     console.error('❌ Error exporting combined orders PDF:', err)
   } finally {
@@ -3756,15 +3771,7 @@ const exportOrdersListPDF = async () => {
   doc.save('ใบสรุปยอดการสั่งซื้อเครื่องแบบและอุปกรณ์.pdf')
 }
 // ─── รวม 2 ใบในไฟล์ PDF เดียว (หน้า 1 = ใบรายการสั่งซื้อ, หน้า 2 = ใบแสดงการชำระเงิน) ───
-async function generateCombinedTwoPagePDF(row: any) {
-  const fontBase64 = await loadThaiFont()
-  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
-  if (fontBase64) {
-    doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
-    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
-    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
-  }
-
+async function addCombinedOrderPages(doc: any, row: any) {
   const pageW = 210
   const margin = 15
   const f = (style: 'normal' | 'bold', size: number) => {
@@ -3773,7 +3780,7 @@ async function generateCombinedTwoPagePDF(row: any) {
   }
 
   // ════════════════════════════════════════════════════════
-  // หน้า 1 — ใบรายการสั่งซื้อเครื่องแบบ (generateCombinedOrderPDF)
+  // หน้า 1 — ใบรายการสั่งซื้อเครื่องแบบ
   // ════════════════════════════════════════════════════════
 
   // ดึงข้อมูล order จาก API
@@ -3940,7 +3947,7 @@ async function generateCombinedTwoPagePDF(row: any) {
   doc.setTextColor(0, 0, 0)
 
   // ════════════════════════════════════════════════════════
-  // หน้า 2 — ใบแสดงการชำระเงิน (generatePaymentReceiptPDF)
+  // หน้า 2 — ใบแสดงการชำระเงิน
   // ════════════════════════════════════════════════════════
   doc.addPage()
   y = 2
@@ -4110,10 +4117,19 @@ async function generateCombinedTwoPagePDF(row: any) {
   doc.setTextColor(150, 150, 150)
   doc.text(`พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, pageW / 2, y, { align: 'center' })
   doc.text('หน้า 2 / 2', pageW - margin, y, { align: 'right' })
+}
 
-  // ════════════════════════════════════════════════════════
-  // บันทึกไฟล์เดียว
-  // ════════════════════════════════════════════════════════
+async function generateCombinedTwoPagePDF(row: any) {
+  const fontBase64 = await loadThaiFont()
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' })
+  if (fontBase64) {
+    doc.addFileToVFS('THSarabunNew.ttf', fontBase64)
+    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'normal')
+    doc.addFont('THSarabunNew.ttf', 'THSarabun', 'bold')
+  }
+
+  await addCombinedOrderPages(doc, row)
+  const fullName = `${row.คำนำหน้า || ''}${row.ชื่อ_นามสกุล || ''}`
   doc.save(`ใบรายการ-${fullName}.pdf`)
 }
 
