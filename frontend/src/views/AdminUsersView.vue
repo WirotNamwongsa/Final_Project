@@ -2703,7 +2703,7 @@ const exportPDF = async () => {
         await addStudentPageToPDF(doc, { ...row, ...ocrData })
       }
 
-      doc.save(`ใบมอบตัว_รวม_${rows.length}_คน.pdf`)
+      doc.save('ใบมอบตัว.pdf')
     } else if (selectedExportType.value === 'payments') {
       // Create single PDF with multiple pages for payments
       const fontBase64 = await loadThaiFont()
@@ -2769,7 +2769,7 @@ const exportCombinedOrdersPDF = async () => {
       await addCombinedOrderPages(doc, row)
     }
 
-    doc.save('ใบรายการ_รวม.pdf')
+    doc.save('ใบรายการ.pdf')
   } catch (err) {
     console.error('❌ Error exporting combined orders PDF:', err)
   } finally {
