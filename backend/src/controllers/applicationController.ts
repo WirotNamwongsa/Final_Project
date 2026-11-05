@@ -146,8 +146,26 @@ export const createApplication = async (req: Request, res: Response) => {
     const {
       id_card_number, id_type, prefix, full_name, address, phone, email,
       prev_school, prev_level, prev_year, gpa, prev_branch,
-      cur_id, div_id, ap_id, doc_type, expenses,
+      cur_id, div_id, ap_id, backup_div_id_1, backup_div_id_2, doc_type, expenses,
     } = req.body;
+
+    const backupDivId1 = Number(backup_div_id_1);
+    const backupDivId2 = Number(backup_div_id_2);
+    if (!Number.isInteger(backupDivId1) || !Number.isInteger(backupDivId2)
+      || backupDivId1 === backupDivId2
+      || backupDivId1 === Number(div_id) || backupDivId2 === Number(div_id)) {
+      await client.query("ROLLBACK");
+      return sendError(res, "กรุณาเลือกสาขาสำรอง 2 สาขาที่ไม่ซ้ำกับสาขาหลัก", 400);
+    }
+
+    const backupBranches = await client.query(`
+      SELECT div_id FROM divisions
+      WHERE cur_id = $1 AND div_id = ANY($2::int[])
+    `, [cur_id, [backupDivId1, backupDivId2]]);
+    if (backupBranches.rows.length !== 2) {
+      await client.query("ROLLBACK");
+      return sendError(res, "สาขาสำรองต้องอยู่ในหลักสูตรเดียวกับสาขาหลัก", 400);
+    }
 
     const existing = await client.query(
       "SELECT app_id FROM applicants WHERE id_card_number = $1 AND status <> 'expired' LIMIT 1",
@@ -177,13 +195,14 @@ export const createApplication = async (req: Request, res: Response) => {
     const appResult = await client.query(`
       INSERT INTO applicants
         (id_card_number, id_type, prefix, full_name, address, phone, email,
-         prev_school, prev_level, prev_year, gpa, prev_branch, cur_id, div_id, ap_id)
-      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15)
+         prev_school, prev_level, prev_year, gpa, prev_branch, cur_id, div_id, ap_id,
+         backup_div_id_1, backup_div_id_2)
+      VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,$17)
       RETURNING app_id
     `, [
       id_card_number, id_type || "thai_id", prefix, full_name, address, phone, email,
       prev_school, prev_level, prev_year, gpa, prev_branch || null,
-      cur_id, div_id, ap_id,
+      cur_id, div_id, ap_id, backupDivId1, backupDivId2,
     ]);
 
     const app_id = appResult.rows[0].app_id;

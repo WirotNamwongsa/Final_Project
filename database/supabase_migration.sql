@@ -90,6 +90,8 @@ CREATE TABLE IF NOT EXISTS public.applicants (
     cur_id         int4         NOT NULL,
     div_id         int4         NOT NULL,
     ap_id          int4         NOT NULL,
+    backup_div_id_1 int4         NULL,
+    backup_div_id_2 int4         NULL,
     status         varchar(30)  NOT NULL DEFAULT 'pending_payment',
     created_at     timestamptz  DEFAULT now() NULL,
     updated_at     timestamptz  DEFAULT now() NULL,
@@ -98,7 +100,9 @@ CREATE TABLE IF NOT EXISTS public.applicants (
     CONSTRAINT applicants_pkey PRIMARY KEY (app_id),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
-    CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
+    CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id),
+    CONSTRAINT fk_backup_div_id_1 FOREIGN KEY (backup_div_id_1) REFERENCES public.divisions(div_id),
+    CONSTRAINT fk_backup_div_id_2 FOREIGN KEY (backup_div_id_2) REFERENCES public.divisions(div_id)
 );
 
 CREATE UNIQUE INDEX applicants_active_id_card_number_key

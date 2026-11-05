@@ -5,18 +5,18 @@
     <div class="flex items-center justify-between mb-8">
       <div v-for="(step, i) in steps" :key="i" class="flex items-center" :class="i < steps.length - 1 ? 'flex-1' : ''">
         <div class="flex flex-col items-center">
-          <div class="w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all" :class="currentStep > i ? 'bg-emerald-500 border-emerald-500 text-white'
-            : currentStep === i ? 'bg-emerald-500 border-emerald-500 text-white'
+          <div class="w-11 h-11 rounded-full flex items-center justify-center border-2 transition-all" :class="progressStep > i ? 'bg-emerald-500 border-emerald-500 text-white'
+            : progressStep === i ? 'bg-emerald-500 border-emerald-500 text-white'
               : 'border-gray-300 text-gray-300 bg-white'">
-            <CheckIcon v-if="currentStep > i" class="w-4 h-4" />
+            <CheckIcon v-if="progressStep > i" class="w-4 h-4" />
             <component v-else :is="step.icon" class="w-4 h-4" />
           </div>
           <p class="text-xs mt-2 font-medium text-center"
-            :class="currentStep >= i ? 'text-emerald-600' : 'text-gray-400'">{{ step.label }}</p>
+            :class="progressStep >= i ? 'text-emerald-600' : 'text-gray-400'">{{ step.label }}</p>
           <p class="text-xs text-gray-400 text-center">{{ step.sub }}</p>
         </div>
         <div v-if="i < steps.length - 1" class="flex-1 h-0.5 mx-2 mb-6 transition-all"
-          :class="currentStep > i ? 'bg-emerald-500' : 'bg-gray-200'" />
+          :class="progressStep > i ? 'bg-emerald-500' : 'bg-gray-200'" />
       </div>
     </div>
 
@@ -284,11 +284,42 @@
             </span>
           </div>
         </div>
-        <p v-if="showError" class="text-red-500 text-sm mt-4">⚠️ กรุณาเลือกสาขาวิชาก่อนดำเนินการต่อ</p>
+        <p v-if="showError && !form.apId" class="text-red-500 text-sm mt-4">⚠️ กรุณาเลือกสาขาวิชาที่สมัคร</p>
       </div>
 
-      <!-- Step 4: ค่าใช้จ่าย -->
+      <!-- Step 4: เลือกสาขาสำรอง -->
       <div v-if="currentStep === 3">
+        <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-3">
+          <AcademicCapIcon class="w-5 h-5 text-emerald-500" /> เลือกสาขาสำรอง
+        </h2>
+        <p class="text-sm text-gray-500 mb-5">เลือก 2 สาขาตามลำดับสำรอง โดยสาขาหลักที่เลือกไว้คือ <strong>{{ selectedPlan?.div_name || '-' }}</strong></p>
+        <div class="mb-5 inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 text-emerald-700 rounded-xl text-sm font-medium">
+          <AcademicCapIcon class="w-4 h-4" /> หลักสูตร: {{ fixedCourseLabel }}
+        </div>
+        <div v-if="!selectedPlan" class="text-center py-8 text-gray-400">กรุณากลับไปเลือกสาขาหลักก่อน</div>
+        <div v-else-if="backupBranchOptions.length === 0" class="text-center py-8 text-gray-400">ไม่พบสาขาอื่นสำหรับเลือกเป็นสาขาสำรอง</div>
+        <div v-else class="grid grid-cols-1 gap-3">
+          <button v-for="plan in backupBranchOptions" :key="plan.ap_id" type="button"
+            @click="selectBackupBranch(plan.div_id)"
+            class="w-full flex items-center justify-between text-left border-2 rounded-xl px-5 py-4 transition-all"
+            :class="backupRank(plan.div_id) ? 'border-emerald-500 bg-emerald-50' : 'border-gray-200 hover:border-emerald-300'">
+            <div>
+              <p class="font-medium text-sm text-gray-800">{{ plan.div_name }}</p>
+              <p class="text-xs text-gray-400 mt-0.5">{{ plan.cur_name }}</p>
+            </div>
+            <span v-if="backupRank(plan.div_id)" class="px-3 py-1 rounded-full text-xs font-medium bg-emerald-100 text-emerald-700">
+              สำรองอันดับ {{ backupRank(plan.div_id) }}
+            </span>
+            <span v-else class="px-3 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500">เลือกเป็นสาขาสำรอง</span>
+          </button>
+        </div>
+        <p v-if="showError && (!form.backupDivId1 || !form.backupDivId2)" class="text-red-500 text-sm mt-4">
+          ⚠️ กรุณาเลือกสาขาสำรองให้ครบ 2 อันดับ
+        </p>
+      </div>
+
+      <!-- Step 5: ค่าใช้จ่าย -->
+      <div v-if="currentStep === 4">
         <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-6">
           <ShoppingBagIcon class="w-5 h-5 text-emerald-500" /> รายการค่าใช้จ่าย
         </h2>
@@ -387,7 +418,7 @@
       </div>
 
       <!-- Step 5: ยืนยันและปริ้นท์ -->
-      <div v-if="currentStep === 4">
+      <div v-if="currentStep === 5">
         <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-6">
           <PrinterIcon class="w-5 h-5 text-emerald-500" /> ยืนยันข้อมูลและใบชำระเงิน
         </h2>
@@ -427,6 +458,14 @@
               <div>
                 <p class="text-xs text-gray-400">สาขาวิชา</p>
                 <p class="font-medium text-emerald-600">{{ selectedPlan?.div_name || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">สาขาสำรองอันดับ 1</p>
+                <p class="font-medium">{{ admissionPlans.find(p => String(p.div_id) === form.backupDivId1)?.div_name || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">สาขาสำรองอันดับ 2</p>
+                <p class="font-medium">{{ admissionPlans.find(p => String(p.div_id) === form.backupDivId2)?.div_name || '-' }}</p>
               </div>
             </div>
           </div>
@@ -468,7 +507,7 @@
           ย้อนกลับ
         </button>
         <div v-else />
-        <button v-if="currentStep < 4" @click="nextStep" :disabled="!validateStep()"
+        <button v-if="currentStep < 5" @click="nextStep" :disabled="!validateStep()"
           class="px-6 py-2.5 rounded-xl bg-emerald-500 text-white text-sm hover:bg-emerald-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
           ถัดไป
         </button>
@@ -590,6 +629,7 @@ import {
 } from '@heroicons/vue/24/outline'
 
 const currentStep = ref(0)
+const progressStep = computed(() => currentStep.value >= 3 ? currentStep.value - 1 : currentStep.value)
 const isLoading = ref(false)
 const isSubmitting = ref(false)
 const showConfirm = ref(false)
@@ -662,6 +702,7 @@ const form = reactive({
   eduFront: null as File | null, eduFrontPreview: '',
   eduBack: null as File | null, eduBackPreview: '',
   curId: 0, apId: 0,
+  backupDivId1: '', backupDivId2: '',
   expenseOrders: {} as Record<number, { qty: number; size?: string; customSize?: string }>,
 })
 
@@ -713,6 +754,9 @@ const prevLevelLabel = computed(() => {
 })
 
 const selectedPlan = computed(() => admissionPlans.value.find(p => p.ap_id === form.apId))
+const backupBranchOptions = computed(() => admissionPlans.value.filter(plan =>
+  plan.div_id !== selectedPlan.value?.div_id
+))
 const requiredExpenses = computed(() => expenses.value.filter(e => e.payment_type === 'mandatory'))
 const requiredTotal = computed(() => requiredExpenses.value.reduce((sum, e) => sum + e.exp_cost, 0))
 
@@ -766,9 +810,30 @@ async function loadPvcBranches() {
   }
 }
 
+function backupRank(divId: number) {
+  if (String(divId) === form.backupDivId1) return 1
+  if (String(divId) === form.backupDivId2) return 2
+  return 0
+}
+
+function selectBackupBranch(divId: number) {
+  const value = String(divId)
+  if (value === form.backupDivId1) {
+    form.backupDivId1 = form.backupDivId2
+    form.backupDivId2 = ''
+  } else if (value === form.backupDivId2) {
+    form.backupDivId2 = ''
+  } else if (!form.backupDivId1) {
+    form.backupDivId1 = value
+  } else {
+    form.backupDivId2 = value
+  }
+}
+
 function selectPlan(ap_id: number, cur_id: number) {
   console.log('selectPlan ap_id:', ap_id, 'cur_id:', cur_id)
   form.apId = ap_id; form.curId = cur_id
+  form.backupDivId1 = ''; form.backupDivId2 = ''
   loadExpenses(cur_id)
 }
 
@@ -1104,7 +1169,11 @@ function validateStep() {
     return !!(form.prevSchool && form.prevLevel && yearValid && gpaValid && eduValid && branchValid)
   }
   if (currentStep.value === 2) return !!form.apId
-  if (currentStep.value === 3) {
+  if (currentStep.value === 3) return !!form.backupDivId1 && !!form.backupDivId2
+    && form.backupDivId1 !== form.backupDivId2
+    && form.backupDivId1 !== String(selectedPlan.value?.div_id)
+    && form.backupDivId2 !== String(selectedPlan.value?.div_id)
+  if (currentStep.value === 4) {
     const missingSize = expenses.value
       .filter(e => e.payment_type !== 'mandatory' && e.exp_sizes?.length > 0 && (form.expenseOrders[e.exp_id]?.qty || 0) > 0)
       .some(e => {
@@ -1151,6 +1220,8 @@ async function onConfirmed() {
     fd.append('cur_id', String(form.curId))
     fd.append('div_id', String(selectedPlan.value?.div_id || 0))
     fd.append('ap_id', String(form.apId))
+    fd.append('backup_div_id_1', form.backupDivId1)
+    fd.append('backup_div_id_2', form.backupDivId2)
 
     const expenseList = expenses.value
       .filter(e => {

@@ -98,6 +98,8 @@ CREATE TABLE public.applicants (
     cur_id         int4         NOT NULL,
     div_id         int4         NOT NULL,
     ap_id          int4         NOT NULL,
+    backup_div_id_1 int4         NULL,
+    backup_div_id_2 int4         NULL,
     status         varchar(30)  NOT NULL DEFAULT 'pending_payment',
     review_error_message text    NULL,
     created_at     timestamptz  DEFAULT now() NULL,
@@ -108,7 +110,9 @@ CREATE TABLE public.applicants (
     CONSTRAINT applicants_status_check CHECK (status IN ('pending_payment', 'paid', 'enrolled', 'pending_document_review', 'revision_required', 'pending_approve', 'expired')),
     CONSTRAINT fk_ap_id FOREIGN KEY (ap_id) REFERENCES public.admission_plan(ap_id),
     CONSTRAINT fk_cur_id FOREIGN KEY (cur_id) REFERENCES public.curriculums(cur_id),
-    CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id)
+    CONSTRAINT fk_div_id FOREIGN KEY (div_id) REFERENCES public.divisions(div_id),
+    CONSTRAINT fk_backup_div_id_1 FOREIGN KEY (backup_div_id_1) REFERENCES public.divisions(div_id),
+    CONSTRAINT fk_backup_div_id_2 FOREIGN KEY (backup_div_id_2) REFERENCES public.divisions(div_id)
 );
 
 -- Keep one current (non-expired) application per identity document while retaining expired history.
