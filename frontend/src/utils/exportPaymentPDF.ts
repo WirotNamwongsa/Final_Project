@@ -16,6 +16,8 @@ export interface PaymentPDFData {
   phone: string
   courseLabel: string
   branchName: string
+  backupBranchName1?: string
+  backupBranchName2?: string
   totalPrice: number
   dueDate?: string
   expenses?: any[]
@@ -88,7 +90,12 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
   y += 7
 
   // ─── 2. INFO BOXES ──────────────────────────────────────────
-  const boxH = 42
+  const backupRows: [string, string][] = [
+    ['สาขาสำรองอันดับ 1', data.backupBranchName1 || ''],
+    ['สาขาสำรองอันดับ 2', data.backupBranchName2 || ''],
+  ].filter(([, value]) => Boolean(value))
+  const rowGap = 6.4
+  const boxH = 42 + backupRows.length * rowGap
   const colW = CW / 2 - 2
   const col2X = ML + colW + 4
 
@@ -103,7 +110,6 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
 
   let yL = y + 11
   let yR = y + 11
-  const rowGap = 6.4
   sz(11)
 
   const leftRows: [string, string][] = [
@@ -112,6 +118,7 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
     ['เบอร์โทรศัพท์', data.phone || '-'],
     ['หลักสูตร', data.courseLabel || '-'],
     ['สาขาวิชา', data.branchName || '-'],
+    ...backupRows,
   ]
   leftRows.forEach(([lbl, val]) => {
     const labelText = `${lbl} :`

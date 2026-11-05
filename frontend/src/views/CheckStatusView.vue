@@ -370,6 +370,8 @@ async function downloadPaymentSlip() {
     phone: result.value.raw.phone || '',
     courseLabel: result.value.course || '',
     branchName: result.value.branch || '',
+    backupBranchName1: result.value.raw.backup_div_name_1 || '',
+    backupBranchName2: result.value.raw.backup_div_name_2 || '',
     totalPrice: result.value.totalAmount || 0,
     dueDate: result.value.dueDate || '',
     expenses,

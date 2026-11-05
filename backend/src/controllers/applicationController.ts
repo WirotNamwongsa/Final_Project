@@ -315,6 +315,8 @@ export const checkStatus = async (req: Request, res: Response) => {
         a.app_id, a.prefix, a.full_name, a.phone, a.status, a.review_error_message, a.created_at,
         a.prev_level, a.prev_year,
         c.cur_name, d.div_name,
+        (SELECT div_name FROM divisions WHERE div_id = a.backup_div_id_1) AS backup_div_name_1,
+        (SELECT div_name FROM divisions WHERE div_id = a.backup_div_id_2) AS backup_div_name_2,
         p.total_amount, p.required_amount, p.due_date,
         p.paid_at, p.verified_at, p.slip_sender, p.slip_receiver,
         p.slip_approved,

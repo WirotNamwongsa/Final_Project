@@ -1251,6 +1251,8 @@ async function onConfirmed() {
       idCard: form.idCard, phone: form.phone,
       courseLabel: fixedCourseLabel.value,
       branchName: selectedPlan.value?.div_name || '-',
+      backupBranchName1: admissionPlans.value.find(p => String(p.div_id) === form.backupDivId1)?.div_name || '',
+      backupBranchName2: admissionPlans.value.find(p => String(p.div_id) === form.backupDivId2)?.div_name || '',
       totalPrice: total_amount,
       expenses: expenseList,
     })

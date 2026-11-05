@@ -2890,6 +2890,8 @@ const openPaymentSlipOnly = async (applicantData = infoModal.value.data) => {
     phone: d.phone || '',
     courseLabel: d.cur_name || '',
     branchName: d.div_name || '',
+    backupBranchName1: d.backup_div_name_1 || '',
+    backupBranchName2: d.backup_div_name_2 || '',
     totalPrice: Number(d.total_amount) || 0,
     dueDate: d.due_date
       ? new Date(d.due_date).toLocaleDateString('th-TH', { year: 'numeric', month: 'long', day: 'numeric' })
