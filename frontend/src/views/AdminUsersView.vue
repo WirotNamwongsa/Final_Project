@@ -530,6 +530,20 @@
                     {{ infoModal.data.div_name || '-' }}
                   </span>
                 </div>
+                <div>
+                  <p class="text-xs text-gray-400 mb-1">สาขาสำรองอันดับ 1</p>
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                    {{ infoModal.data.backup_div_name_1 || '-' }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-xs text-gray-400 mb-1">สาขาสำรองอันดับ 2</p>
+                  <span
+                    class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100">
+                    {{ infoModal.data.backup_div_name_2 || '-' }}
+                  </span>
+                </div>
               </div>
             </div>
 
