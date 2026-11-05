@@ -273,5 +273,9 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
   sz(9); normal(); doc.setTextColor(100)
   text(`พิมพ์เมื่อ: ${new Date().toLocaleString('th-TH')}`, W / 2, H - 4, { align: 'center' })
 
-  doc.save(`ใบชำระเงิน-${data.idCard || 'unknown'}.pdf`)
+  const safeName = (data.fullName || 'ผู้สมัคร')
+    .trim()
+    .replace(/[\\/:*?"<>|]/g, '-')
+    .replace(/\s+/g, ' ')
+  doc.save(`ใบชำระ-${safeName}.pdf`)
 }
