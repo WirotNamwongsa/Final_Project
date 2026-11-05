@@ -174,7 +174,7 @@
               paymentSlip.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200',
               isVerifyingSlip ? 'pointer-events-none opacity-60' : ''
             ]" style="min-height: 300px;">
-              <input type="file" accept="image/*" class="hidden" @change="handleSlipUpload($event)" />
+              <input type="file" accept=".jpg,.jpeg,.png,.webp,.jfif,image/jpeg,image/png,image/webp" class="hidden" @change="handleSlipUpload($event)" />
               <div v-if="!paymentSlip.frontPreview"
                 class="flex flex-col items-center justify-center gap-3 text-gray-400 h-full">
                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
@@ -237,7 +237,16 @@
   </div>
   <div>
     <p class="text-sm font-semibold text-amber-700">ตรวจสอบไม่สำเร็จ</p>
-    <p class="text-xs text-amber-500 mt-0.5">{{ slipVerifyResult.message }} — Admin จะตรวจสอบสลิปของท่านอีกครั้ง กดถัดไปเพื่อดำเนินการต่อได้</p>
+    <p class="text-xs text-amber-600 mt-0.5">{{ slipVerifyResult.message }}</p>
+    <p v-if="slipVerifyResult.code === 1009" class="text-xs text-amber-600 mt-1">
+      เป็นปัญหาชั่วคราวของข้อมูลธนาคาร กรุณารอ 15 นาทีแล้วลองตรวจสลิปเดิมอีกครั้ง ไม่ต้องโอนเงินซ้ำ
+    </p>
+    <p v-else-if="slipVerifyResult.code === 1010" class="text-xs text-amber-600 mt-1">
+      กรุณารอตามเวลาที่ SlipOK แจ้ง แล้วลองตรวจสลิปเดิมอีกครั้ง ไม่ต้องโอนเงินซ้ำ
+    </p>
+    <p v-else class="text-xs text-amber-600 mt-1">
+      กรุณาแก้ไขสาเหตุแล้วอัปโหลดสลิปใหม่ ระบบจะยังไม่ให้ดำเนินการต่อจนกว่าจะตรวจผ่าน
+    </p>
   </div>
 </div>
 
@@ -587,6 +596,7 @@ interface UserData {
 
 interface SlipVerifyResult {
   valid: boolean
+  code?: number
   amount?: number
   sender?: string
   receiver?: string
@@ -744,11 +754,12 @@ const handleSlipUpload = async (event: Event) => {
   showToast('error', 'สลิปอาจมีปัญหา ⚠️', result.message || 'Admin จะตรวจสอบอีกครั้ง')
 }
 
-  } catch {
+  } catch (error: any) {
     paymentSlip.front = null
     paymentSlip.frontPreview = ''
-    slipVerifyResult.value = null
-    showToast('error', 'ตรวจสอบไม่สำเร็จ', 'กรุณาลองใหม่อีกครั้ง')
+    const message = error.response?.data?.message || 'กรุณาลองใหม่อีกครั้ง'
+    slipVerifyResult.value = { valid: false, message }
+    showToast('error', 'ตรวจสอบไม่สำเร็จ', message)
   } finally {
     isVerifyingSlip.value = false
       ; (event.target as HTMLInputElement).value = ''
@@ -772,6 +783,11 @@ const handleNextClick = () => {
 }
   if (!isAllDocumentsUploaded.value) {
  showToast('error', 'กรุณาอัปโหลดสลิป', 'กรุณาอัปโหลดหลักฐานการชำระเงินก่อนดำเนินการต่อ')
+    return
+  }
+
+  if (currentStep.value === 1 && !slipVerifyResult.value?.valid) {
+    showToast('error', 'ยังยืนยันสลิปไม่ได้', 'กรุณาแก้ไขปัญหาการตรวจสลิปและอัปโหลดใหม่จนกว่าระบบจะแจ้งว่าผ่าน')
     return
   }
 

@@ -11,9 +11,13 @@ import { getPublicUrl, supabase, STORAGE_BUCKET } from '../config/supabase'
 // ตรวจสอบสลิปกับ Slipok แล้วอัปเดต status → enrolled
 // ========================================================
 export const verifySlip = async (req: Request, res: Response) => {
+  let uploadedSlipPath: string | null = null
   try {
     const file = req.file
     if (!file) return sendError(res, 'ไม่พบไฟล์สลิป', 400)
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.mimetype)) {
+      return sendError(res, 'SlipOK รองรับสลิปไฟล์ JPG, PNG หรือ WEBP เท่านั้น', 400)
+    }
 
     const { idCard, idType } = req.body
     if (!idCard) return sendError(res, 'ไม่พบเลขบัตรประชาชน', 400)
@@ -65,129 +69,157 @@ export const verifySlip = async (req: Request, res: Response) => {
       return sendError(res, 'หมดเขตชำระเงินแล้ว ใบสมัครถูกตัดสิทธิ์', 410)
     }
 
-    // Upload to Supabase Storage first
+    const branchId = process.env.SLIPOK_BRANCH_ID?.trim()
+    const apiKey = process.env.SLIPOK_API_KEY?.trim()
+    if (process.env.USE_SLIPOK !== 'true' || !branchId || !apiKey) {
+      return sendError(res, 'ระบบตรวจสอบสลิปยังไม่ได้ตั้งค่า SlipOK ครบถ้วน', 503)
+    }
+
+    const slipRequest = new FormData()
+    slipRequest.append('files', file.buffer, {
+      filename: file.originalname,
+      contentType: file.mimetype,
+    })
+    slipRequest.append('amount', String(Number(total_amount)))
+    slipRequest.append('log', 'true')
+
+    let slipokPayload: any
+    try {
+      const slipokRes = await axios.post(
+        `https://api.slipok.com/api/line/apikey/${encodeURIComponent(branchId)}`,
+        slipRequest,
+        {
+          headers: {
+            ...slipRequest.getHeaders(),
+            'x-authorization': apiKey,
+          },
+          timeout: 20000,
+        },
+      )
+      slipokPayload = slipokRes.data
+    } catch (slipokError: any) {
+      const providerResponse = slipokError.response
+      const providerBody = providerResponse?.data
+      if (providerResponse?.status === 401 || Number(providerBody?.code) === 1002) {
+        console.error('SlipOK authorization failed; check branch ID and API key')
+        return sendError(res, 'ข้อมูลเชื่อมต่อ SlipOK ไม่ถูกต้อง กรุณาตรวจสอบ Branch ID และ API Key', 502)
+      }
+      if (Number(providerBody?.code) === 1003) {
+        return sendError(res, 'แพ็กเกจ SlipOK หมดอายุ กรุณาต่ออายุแพ็กเกจในบัญชี SlipOK แล้วลองอัปโหลดสลิปอีกครั้ง', 503)
+      }
+      if (Number(providerBody?.code) === 1004) {
+        return sendError(res, 'โควตาแพ็กเกจ SlipOK หมดแล้ว กรุณาต่ออายุหรือเพิ่มแพ็กเกจแล้วลองอีกครั้ง', 503)
+      }
+      if (providerResponse && providerResponse.status < 500 && providerBody) {
+        return sendSuccess(res, {
+          valid: false,
+          code: Number(providerBody.code) || undefined,
+          message: providerBody.message || 'SlipOK ตรวจสอบสลิปไม่ผ่าน',
+        })
+      }
+      console.error('SlipOK request failed:', providerResponse?.status || slipokError.code || slipokError.message)
+      return sendError(res, 'เชื่อมต่อ SlipOK ไม่สำเร็จ กรุณาลองใหม่', 502)
+    }
+
+    const slipData = slipokPayload?.data
+    if (slipokPayload?.success !== true || slipData?.success !== true) {
+      return sendSuccess(res, {
+        valid: false,
+        message: slipData?.message || slipokPayload?.message || 'SlipOK ตรวจสอบสลิปไม่ผ่าน',
+      })
+    }
+
+    const slipAmount = Number(slipData.amount)
+    const requiredAmount = Number(total_amount)
+    if (!Number.isFinite(slipAmount) || Math.abs(slipAmount - requiredAmount) > 0.01) {
+      return sendSuccess(res, {
+        valid: false,
+        message: `ยอดในสลิป ${Number.isFinite(slipAmount) ? slipAmount.toLocaleString() : '-'} บาท ไม่ตรงกับยอดที่ต้องชำระ ${requiredAmount.toLocaleString()} บาท`,
+      })
+    }
+
+    // Store only after SlipOK has confirmed the recipient, amount, and slip validity.
     const { path: supabasePath, error: uploadError } = await uploadToSupabase(file, 'payment-slips')
     if (uploadError) {
       return sendError(res, `อัปโหลดไฟล์ไม่สำเร็จ: ${uploadError}`, 500)
     }
+    uploadedSlipPath = supabasePath
 
-    // ========================================================
-    // Slipok API - DISABLED FOR TESTING
-    // ========================================================
-    // Uncomment when Slipok API is configured and ready to use
-    // 
-    // const USE_SLIPOK = process.env.USE_SLIPOK === 'true'
-    // 
-    // if (USE_SLIPOK && process.env.SLIPOK_BRANCH_ID && process.env.SLIPOK_API_KEY) {
-    //   // Use buffer directly for Slipok (no need for file path)
-    //   const formData = new FormData()
-    //   formData.append('files', file.buffer, {
-    //     filename: file.originalname,
-    //     contentType: file.mimetype
-    //   })
-    // 
-    //   const slipokRes = await axios.post(
-    //     `https://api.slipok.com/api/line/apikey/${process.env.SLIPOK_BRANCH_ID}`,
-    //     formData,
-    //     {
-    //       headers: {
-    //         ...formData.getHeaders(),
-    //         'x-authorization': process.env.SLIPOK_API_KEY,
-    //       },
-    //     }
-    //   )
-    // 
-    //   const data = slipokRes.data
-    // 
-    //   if (!data.success) {
-    //     return sendSuccess(res, {
-    //       valid: false,
-    //       message: data.message ?? 'สลิปไม่ถูกต้อง',
-    //     })
-    //   }
-    // 
-    //   const slipAmount = Number(data.data.amount)
-    //   const requiredAmount = Number(total_amount)
-    // 
-    //   if (slipAmount < requiredAmount) {
-    //     return sendSuccess(res, {
-    //       valid: false,
-    //       message: `ยอดโอนไม่ครบ โอนมา ${slipAmount.toLocaleString()} บาท แต่ต้องชำระ ${requiredAmount.toLocaleString()} บาท`,
-    //     })
-    //   }
-    // }
+    // Save the status and payment details together after a successful SlipOK check.
+    const client = await pool.connect()
+    try {
+      await client.query('BEGIN')
 
-    // TEMPORARY: Always return valid for testing without Slipok
-    console.log('⚠️ Slipok API disabled - accepting slip without verification for testing')
-
-    // ✅ สลิปผ่าน → save slip_path ด้วย
-    if (status === 'pending_payment') {
-      const transition = await pool.query(`
-        UPDATE applicants a
-        SET status = 'pending_document_review',
-            review_error_message = NULL
-        WHERE a.app_id = $1 AND a.status = 'pending_payment'
-          AND EXISTS (
-            SELECT 1 FROM payments p
-            WHERE p.app_id = a.app_id AND p.due_date > NOW()
-          )
-        RETURNING a.app_id
-      `, [app_id])
+      const transition = status === 'pending_payment'
+        ? await client.query(`
+            UPDATE applicants a
+            SET status = 'pending_document_review', review_error_message = NULL
+            WHERE a.app_id = $1 AND a.status = 'pending_payment'
+              AND EXISTS (
+                SELECT 1 FROM payments p
+                WHERE p.app_id = a.app_id AND p.due_date > NOW()
+              )
+            RETURNING a.app_id
+          `, [app_id])
+        : await client.query(`
+            UPDATE applicants
+            SET status = 'pending_document_review', review_error_message = NULL
+            WHERE app_id = $1 AND status = $2
+            RETURNING app_id
+          `, [app_id, status])
 
       if (transition.rowCount === 0) {
-        try {
+        if (status === 'pending_payment') {
+          await client.query('ROLLBACK')
           await supabase.storage.from(STORAGE_BUCKET).remove([supabasePath])
-        } catch (cleanupError) {
-          console.error('Failed to remove late payment slip:', cleanupError)
+          uploadedSlipPath = null
+          return sendError(res, 'หมดเขตชำระเงินหรือสถานะใบสมัครเปลี่ยนแล้ว กรุณาตรวจสอบสถานะอีกครั้ง', 410)
         }
-        return sendError(res, 'หมดเขตชำระเงินแล้ว ใบสมัครถูกตัดสิทธิ์', 410)
+        throw new Error('Applicant status changed while saving verified slip')
       }
-    } else {
-      await pool.query(`
-        UPDATE applicants
-        SET status = 'pending_document_review', review_error_message = NULL
-        WHERE app_id = $1
-      `, [app_id])
-    }
 
-    await pool.query(`
-      UPDATE payments
-      SET
-        slip_path     = $1,
-        slip_name     = $2,
-        paid_at       = NOW(),
-        slip_sender   = $3,
-        slip_receiver = $4
-      WHERE app_id = $5
-    `, [
-      supabasePath,
-      file.originalname,
-      '-', // Temporary: no sender data without Slipok
-      '-', // Temporary: no receiver data without Slipok
-      app_id
-    ])
+      const paymentUpdate = await client.query(`
+        UPDATE payments
+        SET
+          slip_path     = $1,
+          slip_name     = $2,
+          paid_at       = NOW(),
+          slip_sender   = $3,
+          slip_receiver = $4
+        WHERE app_id = $5
+      `, [
+        supabasePath,
+        file.originalname,
+        slipData.sender?.displayName || slipData.sender?.name || '-',
+        slipData.receiver?.displayName || slipData.receiver?.name || '-',
+        app_id
+      ])
+      if (paymentUpdate.rowCount === 0) throw new Error('Payment record not found for applicant')
+
+      await client.query('COMMIT')
+      uploadedSlipPath = null
+    } catch (dbError) {
+      await client.query('ROLLBACK')
+      throw dbError
+    } finally {
+      client.release()
+    }
 
     return sendSuccess(res, {
       valid: true,
-      amount: total_amount, // Temporary: use required amount
-      date: new Date().toISOString(),
-      sender: '-',
-      receiver: '-',
+      amount: slipAmount,
+      date: slipData.transTimestamp || new Date().toISOString(),
+      sender: slipData.sender?.displayName || slipData.sender?.name || '-',
+      receiver: slipData.receiver?.displayName || slipData.receiver?.name || '-',
     })
 
   } catch (err: any) {
     console.error('❌ verifySlip error:', err.message)
-    console.error('❌ detail:', err.detail)
-    
-    // Since Slipok is disabled, just return success for any error during testing
-    return sendSuccess(res, {
-      valid: true,
-      message: 'อัปโหลดสลิปสำเร็จ (Slipok disabled)',
-      amount: 0, // Default amount for error case
-      date: new Date().toISOString(),
-      sender: '-',
-      receiver: '-',
-    })
+    if (uploadedSlipPath) {
+      const { error: cleanupError } = await supabase.storage.from(STORAGE_BUCKET).remove([uploadedSlipPath])
+      if (cleanupError) console.error('Failed to clean up uncommitted slip upload:', cleanupError.message)
+    }
+    return sendError(res, 'เกิดข้อผิดพลาดระหว่างตรวจสอบสลิป กรุณาลองใหม่', 500)
   }
 }
 

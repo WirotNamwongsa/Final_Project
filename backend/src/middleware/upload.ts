@@ -6,9 +6,9 @@ import { supabase, STORAGE_BUCKET, getPublicUrl as getSupabasePublicUrl } from '
 const storage = multer.memoryStorage()
 
 const fileFilter = (_req: any, file: Express.Multer.File, cb: multer.FileFilterCallback) => {
-  const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'application/pdf']
+  const allowed = ['image/jpeg', 'image/png', 'image/jpg', 'image/webp', 'application/pdf']
   if (allowed.includes(file.mimetype)) cb(null, true)
-  else cb(new Error('ไฟล์ต้องเป็น JPG, PNG หรือ PDF เท่านั้น'))
+  else cb(new Error('ไฟล์ต้องเป็น JPG, PNG, WEBP หรือ PDF เท่านั้น'))
 }
 
 const multerUpload = multer({
