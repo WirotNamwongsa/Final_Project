@@ -277,5 +277,5 @@ export async function exportPaymentPDF(data: PaymentPDFData) {
     .trim()
     .replace(/[\\/:*?"<>|]/g, '-')
     .replace(/\s+/g, ' ')
-  doc.save(`ใบชำระ-${safeName}.pdf`)
+  doc.save(`ใบแจ้งชำระ-${safeName}.pdf`)
 }
