@@ -288,18 +288,9 @@
                 <td class="px-4 py-3 text-center">
                   <span :class="[
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold',
-                    row.สถานะ === 'enrolled' ? 'bg-green-50 text-green-700 border border-green-200' :
-                    row.สถานะ === 'expired' ? 'bg-red-50 text-red-700 border border-red-200' :
-                      row.สถานะ === 'revision_required' ? 'bg-rose-50 text-rose-700 border border-rose-200' :
-                        row.สถานะ === 'pending_document_review' ? 'bg-yellow-50 text-yellow-700 border border-yellow-200' :
-                          'bg-gray-50 text-gray-500 border border-gray-200'
+                    getStatusBadgeClass(row.สถานะ)
                   ]">
-                    {{
-                    row.สถานะ === 'enrolled' ? 'มอบตัวแล้ว' :
-                        row.สถานะ === 'expired' ? 'หมดเขตชำระเงิน' :
-                        row.สถานะ === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
-                          row.สถานะ === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
-                    }}
+                    {{ getStatusLabel(row.สถานะ) }}
                   </span>
                 </td>
                 <td class="px-4 py-3 text-gray-600">{{ row.เบอร์โทร || '-' }}</td>
@@ -424,11 +415,7 @@
           <!-- ── Header ── -->
           <div :class="[
             'px-6 py-5 flex-shrink-0',
-            infoModal.status === 'enrolled' ? 'bg-gradient-to-r from-emerald-500 to-teal-500' :
-            infoModal.status === 'expired' ? 'bg-gradient-to-r from-red-500 to-rose-500' :
-              infoModal.status === 'revision_required' ? 'bg-gradient-to-r from-rose-500 to-pink-500' :
-                infoModal.status === 'pending_document_review' ? 'bg-gradient-to-r from-amber-500 to-orange-400' :
-                  'bg-gradient-to-r from-gray-500 to-gray-600'
+            getStatusHeaderClass(infoModal.status)
           ]">
             <div class="flex items-start justify-between">
               <div class="flex items-center gap-4">
@@ -444,12 +431,7 @@
                   <span
                     class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-white/20 text-white text-xs font-bold">
                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse inline-block"></span>
-                    {{
-                      infoModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
-                        infoModal.status === 'expired' ? 'หมดเขตชำระเงิน' :
-                        infoModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
-                          infoModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
-                    }}
+                    {{ getStatusLabel(infoModal.status) }}
                   </span>
                 </div>
               </div>
@@ -706,17 +688,10 @@
                   <p class="font-bold text-white text-lg">{{ docModal.name }}</p>
                   <span :class="[
                     'inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold mt-1',
-                    docModal.status === 'enrolled' ? 'bg-emerald-500/30 text-emerald-200' :
-                      docModal.status === 'revision_required' ? 'bg-rose-400/30 text-rose-100' :
-                        docModal.status === 'pending_document_review' ? 'bg-yellow-400/30 text-yellow-200' :
-                          'bg-white/10 text-white/70'
+                    getStatusDocBadgeClass(docModal.status)
                   ]">
                     <span class="w-1.5 h-1.5 rounded-full bg-current inline-block"></span>
-                    {{
-                      docModal.status === 'enrolled' ? 'มอบตัวแล้ว' :
-                          docModal.status === 'revision_required' ? 'ต้องแก้ไขเอกสาร' :
-                          docModal.status === 'pending_document_review' ? 'รอตรวจสอบเอกสาร' : 'สมัครใหม่'
-                    }}
+                    {{ getStatusLabel(docModal.status) }}
                   </span>
                 </div>
               </div>
@@ -1202,7 +1177,10 @@ const openInfoModal = async (row: any) => {
       api.get(`/admin/applicants/detail/${row.เลขบัตรประชาชน}`),
       api.get(`/enrollments/orders/${row.เลขบัตรประชาชน}`),
     ])
-    if (appRes.status === 'fulfilled') infoModal.value.data = appRes.value.data?.data
+    if (appRes.status === 'fulfilled') {
+      infoModal.value.data = appRes.value.data?.data
+      infoModal.value.status = infoModal.value.data?.status || infoModal.value.status
+    }
     if (ordersRes.status === 'fulfilled') infoModal.value.orders = ordersRes.value.data?.data ?? []
   } catch (e) {
     console.error('โหลดข้อมูลไม่สำเร็จ', e)
@@ -2233,7 +2211,7 @@ watch([selectedCurFilter, allBranches], () => {
 })
 
 const allStatuses = computed(() => {
-  return ['pending_payment', 'expired', 'pending_document_review', 'revision_required', 'enrolled']
+  return ['pending_payment', 'paid', 'pending_approve', 'expired', 'pending_document_review', 'revision_required', 'enrolled']
 })
 
 const filteredExportData = computed<any[]>(() =>
@@ -2301,12 +2279,42 @@ const getStatusLabel = (status: string): string => {
     'enrolled': 'มอบตัวแล้ว',
     'paid': 'พร้อมมอบตัว',
     'pending_payment': 'สมัครใหม่',
+    'pending_approve': 'รอตรวจสอบการชำระเงิน',
     'pending_document_review': 'รอตรวจสอบเอกสาร',
     'revision_required': 'ต้องแก้ไขเอกสาร',
     'expired': 'หมดเขตชำระเงิน'
   }
   return labels[status] || status
 }
+
+const getStatusBadgeClass = (status: string): string => ({
+  enrolled: 'bg-green-50 text-green-700 border border-green-200',
+  paid: 'bg-blue-50 text-blue-700 border border-blue-200',
+  pending_approve: 'bg-indigo-50 text-indigo-700 border border-indigo-200',
+  pending_payment: 'bg-gray-50 text-gray-600 border border-gray-200',
+  pending_document_review: 'bg-yellow-50 text-yellow-700 border border-yellow-200',
+  revision_required: 'bg-rose-50 text-rose-700 border border-rose-200',
+  expired: 'bg-red-50 text-red-700 border border-red-200',
+}[status] || 'bg-gray-50 text-gray-500 border border-gray-200')
+
+const getStatusHeaderClass = (status: string): string => ({
+  enrolled: 'bg-gradient-to-r from-emerald-500 to-teal-500',
+  paid: 'bg-gradient-to-r from-blue-500 to-indigo-500',
+  pending_approve: 'bg-gradient-to-r from-indigo-500 to-blue-500',
+  pending_payment: 'bg-gradient-to-r from-gray-500 to-gray-600',
+  pending_document_review: 'bg-gradient-to-r from-amber-500 to-orange-400',
+  revision_required: 'bg-gradient-to-r from-rose-500 to-pink-500',
+  expired: 'bg-gradient-to-r from-red-500 to-rose-500',
+}[status] || 'bg-gradient-to-r from-gray-500 to-gray-600')
+
+const getStatusDocBadgeClass = (status: string): string => ({
+  enrolled: 'bg-emerald-500/30 text-emerald-200',
+  paid: 'bg-blue-500/30 text-blue-100',
+  pending_approve: 'bg-indigo-500/30 text-indigo-100',
+  pending_document_review: 'bg-yellow-400/30 text-yellow-200',
+  revision_required: 'bg-rose-400/30 text-rose-100',
+  expired: 'bg-red-500/30 text-red-100',
+}[status] || 'bg-white/10 text-white/70')
 
 watch([
   exportSearch, selectedBranch, selectedCurFilter, selectedStatus,

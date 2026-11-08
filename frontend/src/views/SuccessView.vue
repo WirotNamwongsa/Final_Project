@@ -200,8 +200,12 @@
               </svg>
             </div>
             <div>
-              <p class="text-sm font-semibold text-emerald-700">กำลังตรวจสอบสลิป...</p>
-              <p class="text-xs text-emerald-500 mt-0.5">กรุณารอสักครู่ ระบบกำลังยืนยันข้อมูล</p>
+              <p class="text-sm font-semibold text-emerald-700">{{ slipRetryCountdown > 0 ? 'กำลังรอธนาคารตอบกลับ' : 'กำลังตรวจสอบสลิป...' }}</p>
+              <p class="text-xs text-emerald-500 mt-0.5">
+                {{ slipRetryCountdown > 0
+                  ? `ระบบจะตรวจสลิปเดิมซ้ำอัตโนมัติใน ${formatRetryCountdown(slipRetryCountdown)}`
+                  : 'กรุณารอสักครู่ ระบบกำลังยืนยันข้อมูล' }}
+              </p>
             </div>
           </div>
 
@@ -224,7 +228,9 @@
             <button @click="goBackStep"
               class="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium">ย้อนกลับ</button>
             <button @click="handleNextClick" :disabled="isVerifyingSlip"
-              class="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">ถัดไป</button>
+              class="px-6 py-3 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors font-medium">
+              {{ slipVerifyResult?.code === 1009 || slipVerifyResult?.code === 1010 ? 'ตรวจซ้ำและถัดไป' : 'ถัดไป' }}
+            </button>
           </div>
                   <!-- ⚠️ SlipOK -->
 <div v-if="slipVerifyResult && !slipVerifyResult.valid && !isVerifyingSlip"
@@ -597,6 +603,7 @@ interface UserData {
 interface SlipVerifyResult {
   valid: boolean
   code?: number
+  retryAfterSeconds?: number
   amount?: number
   sender?: string
   receiver?: string
@@ -615,6 +622,13 @@ const isLoadingData = ref(true)
 
 const slipVerifyResult = ref<SlipVerifyResult | null>(null)
 const isVerifyingSlip = ref(false)
+const slipRetryCountdown = ref(0)
+
+const formatRetryCountdown = (seconds: number) => {
+  const minutes = Math.floor(seconds / 60)
+  const remainingSeconds = seconds % 60
+  return `${String(minutes).padStart(2, '0')}:${String(remainingSeconds).padStart(2, '0')}`
+}
 
 const userData = ref<UserData>({ fullName: '', prefix: '', curName: '', divName: '', totalAmount: 0, status: '' })
 const orderItems = ref<any[]>([])
@@ -732,44 +746,61 @@ const handleSlipUpload = async (event: Event) => {
   reader.onload = (e) => { paymentSlip.frontPreview = e.target?.result as string }
   reader.readAsDataURL(file)
 
+  await verifyPaymentSlip(file)
+  ; (event.target as HTMLInputElement).value = ''
+}
+
+const verifyPaymentSlip = async (file: File): Promise<boolean> => {
   isVerifyingSlip.value = true
   slipVerifyResult.value = null
 
   try {
-    const form = new FormData()
-    form.append('slip', file)
-    form.append('idCard', idCard)
-    form.append('idType', idType)
+    while (true) {
+      const form = new FormData()
+      form.append('slip', file)
+      form.append('idCard', idCard)
+      form.append('idType', idType)
 
-    const res = await api.post('/enrollments/verify-slip', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    })
+      const res = await api.post('/enrollments/verify-slip', form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
 
-    const result: SlipVerifyResult = res.data.data
-    slipVerifyResult.value = result
+      const result: SlipVerifyResult = res.data.data
+      slipVerifyResult.value = result
 
-    if (result.valid) {
-      showToast('success', 'อัปโหลดสลิปสำเร็จ ✅', `ยอดโอน ${result.amount?.toLocaleString()} บาท กรุณากดถัดไปเพื่อดำเนินการต่อ`)
-   } else {
-  showToast('error', 'สลิปอาจมีปัญหา ⚠️', result.message || 'Admin จะตรวจสอบอีกครั้ง')
-}
+      if (result.valid) {
+        showToast('success', 'อัปโหลดสลิปสำเร็จ ✅', `ยอดโอน ${result.amount?.toLocaleString()} บาท กรุณากดถัดไปเพื่อดำเนินการต่อ`)
+        return true
+      }
 
+      if ([1009, 1010].includes(result.code || 0)) {
+        const waitSeconds = Math.max(1, result.retryAfterSeconds || (result.code === 1009 ? 900 : 120))
+        slipRetryCountdown.value = waitSeconds
+        while (slipRetryCountdown.value > 0) {
+          await new Promise(resolve => window.setTimeout(resolve, 1000))
+          slipRetryCountdown.value -= 1
+        }
+        continue
+      }
+
+      showToast('error', 'สลิปยังตรวจไม่ผ่าน', result.message || 'กรุณาตรวจสอบสลิปอีกครั้ง')
+      return false
+    }
   } catch (error: any) {
-    paymentSlip.front = null
-    paymentSlip.frontPreview = ''
     const message = error.response?.data?.message || 'กรุณาลองใหม่อีกครั้ง'
     slipVerifyResult.value = { valid: false, message }
     showToast('error', 'ตรวจสอบไม่สำเร็จ', message)
+    return false
   } finally {
+    slipRetryCountdown.value = 0
     isVerifyingSlip.value = false
-      ; (event.target as HTMLInputElement).value = ''
   }
 }
 
 const goBack = () => router.push('/check-status')
 const goBackStep = () => { if (currentStep.value > 0) currentStep.value-- }
 
-const handleNextClick = () => {
+const handleNextClick = async () => {
 
   const status = userData.value.status
 
@@ -787,6 +818,11 @@ const handleNextClick = () => {
   }
 
   if (currentStep.value === 1 && !slipVerifyResult.value?.valid) {
+    if ([1009, 1010].includes(slipVerifyResult.value?.code || 0) && paymentSlip.front) {
+      const verified = await verifyPaymentSlip(paymentSlip.front)
+      if (verified) currentStep.value++
+      return
+    }
     showToast('error', 'ยังยืนยันสลิปไม่ได้', 'กรุณาแก้ไขปัญหาการตรวจสลิปและอัปโหลดใหม่จนกว่าระบบจะแจ้งว่าผ่าน')
     return
   }

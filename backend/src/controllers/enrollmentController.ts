@@ -111,9 +111,16 @@ export const verifySlip = async (req: Request, res: Response) => {
         return sendError(res, 'โควตาแพ็กเกจ SlipOK หมดแล้ว กรุณาต่ออายุหรือเพิ่มแพ็กเกจแล้วลองอีกครั้ง', 503)
       }
       if (providerResponse && providerResponse.status < 500 && providerBody) {
+        const providerCode = Number(providerBody.code)
+        const retryAfterSeconds = providerCode === 1009
+          ? 15 * 60
+          : providerCode === 1010
+            ? Math.max(1, Number(providerBody.data?.delay ?? providerBody.delay ?? 2) * 60)
+            : undefined
         return sendSuccess(res, {
           valid: false,
-          code: Number(providerBody.code) || undefined,
+          code: providerCode || undefined,
+          retryAfterSeconds,
           message: providerBody.message || 'SlipOK ตรวจสอบสลิปไม่ผ่าน',
         })
       }

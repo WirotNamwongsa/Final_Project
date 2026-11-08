@@ -8,6 +8,11 @@ const toUrl = (filePath: string | null) => {
   return getPublicUrl(filePath)
 }
 
+const getEffectiveApplicantStatus = (status: string, dueDate: Date | string | null) => {
+  if (status !== 'pending_payment' || !dueDate) return status
+  return new Date(dueDate).getTime() <= Date.now() ? 'expired' : status
+}
+
 export const getApplicants = async (_req: Request, res: Response) => {
   try {
     const query = `
@@ -28,6 +33,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
         d.div_name,
         p.total_amount,
         p.paid_at,
+        p.due_date,
         p.slip_name,
         p.slip_path,
         e.enrolled_at,   
@@ -53,7 +59,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
         a.phone, a.email, a.status, a.created_at,
         c.cur_id, c.cur_name, c.cur_shortname,
         d.div_id, d.div_name,
-        p.total_amount, p.paid_at, p.slip_name, p.slip_path,
+        p.total_amount, p.paid_at, p.due_date, p.slip_name, p.slip_path,
         e.enrolled_at
       ORDER BY a.created_at DESC
     `
@@ -67,7 +73,7 @@ export const getApplicants = async (_req: Request, res: Response) => {
       id_type:         row.id_type,
       phone:          row.phone,
       email:          row.email,
-      status:         row.status,
+      status:         getEffectiveApplicantStatus(row.status, row.due_date),
       created_at:     row.created_at,
        enrolled_at: row.enrolled_at,
       
@@ -277,6 +283,7 @@ export const getApplicantDetail = async (req: Request, res: Response) => {
       success: true,
       data: {
         ...row,
+        status: getEffectiveApplicantStatus(row.status, row.due_date),
         self_front_url:   toUrl(row.self_front_url),
         self_back_url:    toUrl(row.self_back_url),
         father_front_url: toUrl(row.father_front_url),
