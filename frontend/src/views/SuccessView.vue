@@ -52,9 +52,8 @@
               <div class="upload-box"
                 :class="selfHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!selfHouseRegistration.frontPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดตนเอง</span>
-                  <span class="text-xs">(หน้าเเรก)</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าบ้านเลขที่</span>
                 </div>
                 <img v-else :src="selfHouseRegistration.frontPreview" class="w-full h-full object-contain rounded-xl" />
               </div>
@@ -63,8 +62,8 @@
               <div class="upload-box"
                 :class="selfHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!selfHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดตนเอง</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าชื่อผู้สมัคร</span>
                 </div>
                 <img v-else :src="selfHouseRegistration.backPreview" class="w-full h-full object-contain rounded-xl" />
               </div>
@@ -81,9 +80,8 @@
                 :class="fatherHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!fatherHouseRegistration.frontPreview"
                   class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดบ้านบิดา</span>
-                  <span class="text-xs">(หน้าเเรก)</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าบ้านเลขที่</span>
                 </div>
                 <img v-else :src="fatherHouseRegistration.frontPreview"
                   class="w-full h-full object-contain rounded-xl" />
@@ -93,8 +91,8 @@
               <div class="upload-box"
                 :class="fatherHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!fatherHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดบิดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าชื่อบิดา</span>
                 </div>
                 <img v-else :src="fatherHouseRegistration.backPreview"
                   class="w-full h-full object-contain rounded-xl" />
@@ -112,9 +110,8 @@
                 :class="motherHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!motherHouseRegistration.frontPreview"
                   class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดบ้านมารดา</span>
-                  <span class="text-xs">(หน้าเเรก)</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าบ้านเลขที่</span>
                 </div>
                 <img v-else :src="motherHouseRegistration.frontPreview"
                   class="w-full h-full object-contain rounded-xl" />
@@ -124,8 +121,8 @@
               <div class="upload-box"
                 :class="motherHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
                 <div v-if="!motherHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
-                  <span class="text-xs">หน้ารายละเอียดมารดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่ออัปโหลดภาพ</span>
+                  <span class="text-xs">หน้าชื่อมารดา</span>
                 </div>
                 <img v-else :src="motherHouseRegistration.backPreview"
                   class="w-full h-full object-contain rounded-xl" />
