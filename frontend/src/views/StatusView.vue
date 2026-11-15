@@ -172,12 +172,12 @@
 
           <!--  10.  11.  12.  13.  -->
           <div
-            v-if="applicantInfo.prev_school || applicantInfo.prev_level || applicantInfo.prev_year || applicantInfo.gpa"
+            v-if="applicantInfo.prev_school || applicantInfo.prev_level || applicantInfo.prev_year || (applicantInfo.gpa !== null && applicantInfo.gpa !== undefined && applicantInfo.gpa !== '')"
             class="bg-blue-50 rounded-xl p-4">
             <p class="font-medium text-gray-700 mb-3">ประวัติการศึกษา</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div v-if="applicantInfo.prev_school">
-                <p class="text-xs text-gray-400">โรงเรียนเดิม</p>
+                <p class="text-xs text-gray-400">สถานศึกษาเดิม</p>
                 <p class="font-medium">{{ applicantInfo.prev_school }}</p>
               </div>
               <div v-if="applicantInfo.prev_level">
@@ -188,8 +188,8 @@
                 <p class="text-xs text-gray-400">ปีการศึกษาที่จบ</p>
                 <p class="font-medium">{{ applicantInfo.prev_year }}</p>
               </div>
-              <div v-if="applicantInfo.gpa">
-                <p class="text-xs text-gray-400">เกรดเฉลี่ยการเรียน</p>
+              <div v-if="applicantInfo.gpa !== null && applicantInfo.gpa !== undefined && applicantInfo.gpa !== ''">
+                <p class="text-xs text-gray-400">เกรดเฉลี่ย (GPA)</p>
                 <p class="font-medium">{{ applicantInfo.gpa }}</p>
               </div>
             </div>

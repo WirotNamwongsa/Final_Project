@@ -20,6 +20,12 @@
       </div>
     </div>
 
+    <!-- Hidden image inputs shared by enrollment document and payment-slip uploads -->
+    <input ref="cameraInputRef" type="file" :accept="uploadAccept" capture="environment" class="hidden"
+      @change="handleEnrollmentImageUpload(uploadPicker.target, $event)" />
+    <input ref="galleryInputRef" type="file" :accept="uploadAccept" class="hidden"
+      @change="handleEnrollmentImageUpload(uploadPicker.target, $event)" />
+
     <div class="bg-white rounded-2xl shadow-sm p-8">
 
       <!-- Loading -->
@@ -42,29 +48,27 @@
             <DocumentTextIcon class="w-5 h-5 text-emerald-500" /> สำเนาทะเบียนบ้านของตนเอง
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <label class="block">
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('self_front')">
               <div class="upload-box"
                 :class="selfHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(selfHouseRegistration, 'front', $event)" />
                 <div v-if="!selfHouseRegistration.frontPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดตนเอง</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดตนเอง</span>
                   <span class="text-xs">(หน้าเเรก)</span>
                 </div>
                 <img v-else :src="selfHouseRegistration.frontPreview" class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
-            <label class="block">
+            </button>
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('self_back')">
               <div class="upload-box"
                 :class="selfHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(selfHouseRegistration, 'back', $event)" />
                 <div v-if="!selfHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดตนเอง</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดตนเอง</span>
                 </div>
                 <img v-else :src="selfHouseRegistration.backPreview" class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
+            </button>
           </div>
 
           <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-1 mt-6">
@@ -72,32 +76,30 @@
             <span class="text-xs text-gray-400 font-normal">(ไม่บังคับ)</span>
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <label class="block">
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('father_front')">
               <div class="upload-box"
                 :class="fatherHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(fatherHouseRegistration, 'front', $event)" />
                 <div v-if="!fatherHouseRegistration.frontPreview"
                   class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดบ้านบิดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดบ้านบิดา</span>
                   <span class="text-xs">(หน้าเเรก)</span>
                 </div>
                 <img v-else :src="fatherHouseRegistration.frontPreview"
                   class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
-            <label class="block">
+            </button>
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('father_back')">
               <div class="upload-box"
                 :class="fatherHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(fatherHouseRegistration, 'back', $event)" />
                 <div v-if="!fatherHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดบิดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดบิดา</span>
                 </div>
                 <img v-else :src="fatherHouseRegistration.backPreview"
                   class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
+            </button>
           </div>
 
           <h2 class="text-lg font-semibold text-gray-700 flex items-center gap-2 mb-1 mt-6">
@@ -105,32 +107,30 @@
             <span class="text-xs text-gray-400 font-normal">(ไม่บังคับ)</span>
           </h2>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <label class="block">
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('mother_front')">
               <div class="upload-box"
                 :class="motherHouseRegistration.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(motherHouseRegistration, 'front', $event)" />
                 <div v-if="!motherHouseRegistration.frontPreview"
                   class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดบ้านมารดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดบ้านมารดา</span>
                   <span class="text-xs">(หน้าเเรก)</span>
                 </div>
                 <img v-else :src="motherHouseRegistration.frontPreview"
                   class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
-            <label class="block">
+            </button>
+            <button type="button" class="block w-full cursor-pointer text-left" @click="openUploadPicker('mother_back')">
               <div class="upload-box"
                 :class="motherHouseRegistration.backPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200'">
-                <input type="file" accept="image/*" class="hidden"
-                  @change="handleUpload(motherHouseRegistration, 'back', $event)" />
                 <div v-if="!motherHouseRegistration.backPreview" class="flex flex-col items-center gap-2 text-gray-400">
-                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">หน้ารายละเอียดมารดา</span>
+                  <PhotoIcon class="w-8 h-8" /><span class="text-xs">คลิกเพื่อเลือกวิธีอัปโหลดภาพ</span>
+                  <span class="text-xs">หน้ารายละเอียดมารดา</span>
                 </div>
                 <img v-else :src="motherHouseRegistration.backPreview"
                   class="w-full h-full object-contain rounded-xl" />
               </div>
-            </label>
+            </button>
           </div>
 
           <div class="flex justify-between gap-4 mt-8">
@@ -169,25 +169,25 @@
           </div>
 
           <h3 class="text-base font-semibold text-gray-700 mb-1">สลิปการโอนเงิน</h3>
-          <label class="block">
+          <button type="button" class="block w-full text-left" :disabled="isVerifyingSlip"
+            @click="openUploadPicker('payment_slip')">
             <div class="upload-box" :class="[
               paymentSlip.frontPreview ? 'border-emerald-400 bg-emerald-50' : 'border-gray-200',
               isVerifyingSlip ? 'pointer-events-none opacity-60' : ''
             ]" style="min-height: 300px;">
-              <input type="file" accept=".jpg,.jpeg,.png,.webp,.jfif,image/jpeg,image/png,image/webp" class="hidden" @change="handleSlipUpload($event)" />
               <div v-if="!paymentSlip.frontPreview"
                 class="flex flex-col items-center justify-center gap-3 text-gray-400 h-full">
                 <div class="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                   <PhotoIcon class="w-8 h-8" />
                 </div>
                 <div class="text-center">
-                  <span class="text-sm font-medium">คลิกเพื่ออัปโหลดสลิป</span>
+                  <span class="text-sm font-medium">คลิกเพื่อเลือกวิธีอัปโหลดสลิป</span>
                   <p class="text-xs mt-1">รองรับไฟล์ JPG, PNG (สูงสุด 5MB)</p>
                 </div>
               </div>
               <img v-else :src="paymentSlip.frontPreview" class="w-full h-full object-contain rounded-xl" />
             </div>
-          </label>
+          </button>
 
           <!-- กำลังตรวจสอบ -->
           <div v-if="isVerifyingSlip"
@@ -571,6 +571,43 @@
       </transition>
     </Teleport>
 
+    <!-- Upload method picker, matching the application form -->
+    <Teleport to="body">
+      <transition name="slide-up">
+        <div v-if="uploadPicker.show" class="fixed inset-0 z-[100000] flex items-end justify-center bg-black/40"
+          @click.self="uploadPicker.show = false">
+          <div class="bg-white rounded-t-2xl w-full max-w-md px-5 pt-4 pb-8 shadow-xl">
+            <div class="w-10 h-1 bg-gray-200 rounded-full mx-auto mb-4" />
+            <p class="text-sm font-medium text-gray-500 text-center mb-4">เลือกวิธีอัพโหลดภาพ</p>
+            <div class="grid grid-cols-2 gap-3 mb-3">
+              <button type="button" @click="pickCamera"
+                class="flex flex-col items-center gap-2 py-5 rounded-2xl border-2 border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0118.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                <span class="text-sm font-medium">ถ่ายภาพ</span>
+              </button>
+              <button type="button" @click="pickGallery"
+                class="flex flex-col items-center gap-2 py-5 rounded-2xl border-2 border-gray-200 bg-gray-50 text-gray-700 hover:bg-gray-100 transition">
+                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                    d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M14 8h.01" />
+                </svg>
+                <span class="text-sm font-medium">แกลเลอรี่</span>
+              </button>
+            </div>
+            <button type="button" @click="uploadPicker.show = false"
+              class="w-full py-3 rounded-xl text-sm text-gray-500 hover:bg-gray-100 transition">
+              ยกเลิก
+            </button>
+          </div>
+        </div>
+      </transition>
+    </Teleport>
+
   </div>
 </template>
 
@@ -590,6 +627,9 @@ interface HouseDoc {
   back: File | null
   backPreview: string
 }
+
+type EnrollmentUploadTarget = 'self_front' | 'self_back' | 'father_front' | 'father_back'
+  | 'mother_front' | 'mother_back' | 'payment_slip'
 
 interface UserData {
   fullName: string
@@ -638,6 +678,28 @@ const selfHouseRegistration = reactive<HouseDoc>(createHouseDoc())
 const fatherHouseRegistration = reactive<HouseDoc>(createHouseDoc())
 const motherHouseRegistration = reactive<HouseDoc>(createHouseDoc())
 const paymentSlip = reactive<HouseDoc>(createHouseDoc())
+const uploadPicker = reactive({ show: false, target: 'self_front' as EnrollmentUploadTarget })
+const cameraInputRef = ref<HTMLInputElement | null>(null)
+const galleryInputRef = ref<HTMLInputElement | null>(null)
+const uploadAccept = computed(() => uploadPicker.target === 'payment_slip'
+  ? '.jpg,.jpeg,.png,.webp,.jfif,image/jpeg,image/png,image/webp'
+  : 'image/*')
+
+const openUploadPicker = (target: EnrollmentUploadTarget) => {
+  if (isVerifyingSlip.value) return
+  uploadPicker.target = target
+  uploadPicker.show = true
+}
+
+const pickCamera = () => {
+  uploadPicker.show = false
+  cameraInputRef.value?.click()
+}
+
+const pickGallery = () => {
+  uploadPicker.show = false
+  galleryInputRef.value?.click()
+}
 
 const steps = [
   { label: 'อัปโหลดเอกสาร', sub: 'เอกสารประกอบการสมัคร', icon: DocumentArrowUpIcon },
@@ -723,9 +785,7 @@ const isAllDocumentsUploaded = computed(() => {
   return true
 })
 
-const handleUpload = (target: HouseDoc, side: 'front' | 'back', event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
+const handleUpload = (target: HouseDoc, side: 'front' | 'back', file: File) => {
   target[side] = file
   const reader = new FileReader()
   reader.onload = (e) => {
@@ -737,22 +797,37 @@ const handleUpload = (target: HouseDoc, side: 'front' | 'back', event: Event) =>
 }
 
 // ✅ อัปสลิป → ตรวจ Slipok → ถ้าผ่าน status จะเป็น paid (backend จัดการ)
-const handleSlipUpload = async (event: Event) => {
-  const file = (event.target as HTMLInputElement).files?.[0]
-  if (!file) return
-
+const handleSlipUpload = async (file: File) => {
   paymentSlip.front = file
   const reader = new FileReader()
   reader.onload = (e) => { paymentSlip.frontPreview = e.target?.result as string }
   reader.readAsDataURL(file)
 
   await verifyPaymentSlip(file)
-  ; (event.target as HTMLInputElement).value = ''
+}
+
+const handleEnrollmentImageUpload = (target: EnrollmentUploadTarget, event: Event) => {
+  const input = event.target as HTMLInputElement
+  const file = input.files?.[0]
+  input.value = ''
+  if (!file) return
+
+  switch (target) {
+    case 'self_front': handleUpload(selfHouseRegistration, 'front', file); break
+    case 'self_back': handleUpload(selfHouseRegistration, 'back', file); break
+    case 'father_front': handleUpload(fatherHouseRegistration, 'front', file); break
+    case 'father_back': handleUpload(fatherHouseRegistration, 'back', file); break
+    case 'mother_front': handleUpload(motherHouseRegistration, 'front', file); break
+    case 'mother_back': handleUpload(motherHouseRegistration, 'back', file); break
+    case 'payment_slip': void handleSlipUpload(file); break
+  }
 }
 
 const verifyPaymentSlip = async (file: File): Promise<boolean> => {
   isVerifyingSlip.value = true
   slipVerifyResult.value = null
+  let automaticRetries = 0
+  const maxAutomaticRetries = 1
 
   try {
     while (true) {
@@ -774,6 +849,12 @@ const verifyPaymentSlip = async (file: File): Promise<boolean> => {
       }
 
       if ([1009, 1010].includes(result.code || 0)) {
+        if (automaticRetries >= maxAutomaticRetries) {
+          showToast('error', 'ยังตรวจสอบสลิปไม่ได้', 'ระบบลองตรวจซ้ำอัตโนมัติแล้ว 1 ครั้ง กรุณารอสักครู่แล้วกดตรวจซ้ำอีกครั้ง')
+          return false
+        }
+
+        automaticRetries += 1
         const waitSeconds = Math.max(1, result.retryAfterSeconds || (result.code === 1009 ? 900 : 120))
         slipRetryCountdown.value = waitSeconds
         while (slipRetryCountdown.value > 0) {
@@ -1140,5 +1221,16 @@ const showToast = (type: 'success' | 'error', title: string, message: string) =>
 .toast-leave-to {
   opacity: 0;
   transform: translateX(100%);
+}
+
+.slide-up-enter-active,
+.slide-up-leave-active {
+  transition: all 0.25s ease;
+}
+
+.slide-up-enter-from,
+.slide-up-leave-to {
+  opacity: 0;
+  transform: translateY(100%);
 }
 </style>
