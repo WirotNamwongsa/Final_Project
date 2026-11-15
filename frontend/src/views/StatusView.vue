@@ -149,7 +149,7 @@
 
           <!--  7.  8.  9.  -->
           <div v-if="applicantInfo.cur_name || applicantInfo.div_name" class="bg-emerald-50 rounded-xl p-4">
-            <p class="font-medium text-gray-700 mb-3">ข้อมูลการศึกษา</p>
+            <p class="font-medium text-gray-700 mb-3">หลักสูตรที่สมัคร</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div v-if="applicantInfo.cur_name">
                 <p class="text-xs text-gray-400">แผนการเรียน</p>
@@ -159,6 +159,14 @@
                 <p class="text-xs text-gray-400">สาขา/ส่วนงาน</p>
                 <p class="font-medium text-emerald-600">{{ applicantInfo.div_name }}</p>
               </div>
+              <div>
+                <p class="text-xs text-gray-400">สาขาสำรองอันดับ 1</p>
+                <p class="font-medium text-emerald-600">{{ applicantInfo.backup_div_name_1 || '-' }}</p>
+              </div>
+              <div>
+                <p class="text-xs text-gray-400">สาขาสำรองอันดับ 2</p>
+                <p class="font-medium text-emerald-600">{{ applicantInfo.backup_div_name_2 || '-' }}</p>
+              </div>
             </div>
           </div>
 
@@ -166,18 +174,18 @@
           <div
             v-if="applicantInfo.prev_school || applicantInfo.prev_level || applicantInfo.prev_year || applicantInfo.gpa"
             class="bg-blue-50 rounded-xl p-4">
-            <p class="font-medium text-gray-700 mb-3">ข้อมูลการศึกษาก่อนหน้า</p>
+            <p class="font-medium text-gray-700 mb-3">ประวัติการศึกษา</p>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div v-if="applicantInfo.prev_school">
                 <p class="text-xs text-gray-400">โรงเรียนเดิม</p>
                 <p class="font-medium">{{ applicantInfo.prev_school }}</p>
               </div>
               <div v-if="applicantInfo.prev_level">
-                <p class="text-xs text-gray-400">ระดับการศึกษาเดิม</p>
+                <p class="text-xs text-gray-400">วุฒิการศึกษา</p>
                 <p class="font-medium">{{ prevLevelLabel(applicantInfo.prev_level) }}</p>
               </div>
               <div v-if="applicantInfo.prev_year">
-                <p class="text-xs text-gray-400">ปีการศึกษาเดิม</p>
+                <p class="text-xs text-gray-400">ปีการศึกษาที่จบ</p>
                 <p class="font-medium">{{ applicantInfo.prev_year }}</p>
               </div>
               <div v-if="applicantInfo.gpa">
